@@ -1,5 +1,11 @@
 import AxeBuilder from "@axe-core/playwright";
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
+
+async function navigate(page: Page, name: string) {
+  const menu = page.getByRole("button", { name: "Open navigation" });
+  if (await menu.isVisible()) await menu.click();
+  await page.getByRole("navigation", { name: "Main" }).getByRole("link", { name, exact: true }).click();
+}
 
 test("viewer launches a profile, plays and saves a clip, reranks and resets", async ({ page }) => {
   await page.goto("/");
@@ -20,9 +26,10 @@ test("viewer launches a profile, plays and saves a clip, reranks and resets", as
   await page.getByLabel("Exploration", { exact: true }).focus();
   await page.keyboard.press("End");
   await expect(page.locator('output[for="feed-exploration"]')).toHaveText("100%");
+  await expect(page.locator(".rank-change").first()).toBeVisible();
   await page.getByRole("link", { name: "Open full rank inspector" }).click();
   await expect(page.getByRole("heading", { name: "Score breakdown" })).toBeVisible();
-  await page.getByRole("link", { name: "Preferences", exact: true }).click();
+  await navigate(page, "Preferences");
   await expect(page.getByRole("link", { name: "The Blue Hour" })).toBeVisible();
   await page.getByRole("button", { name: "Reset demo" }).click();
   await expect(page.getByText("No activity yet.")).toBeVisible();
@@ -33,8 +40,12 @@ test("lab renders data and exports a reproducible synthetic comparison", async (
   await expect(page.getByRole("table")).toBeVisible();
   await page.getByLabel("Split").selectOption("validation");
   await expect(page.getByRole("caption")).toHaveText(/validation/);
+  await page.getByLabel("Chart metric").selectOption("recall");
+  await expect(page.getByLabel("Chart metric")).toHaveValue("recall");
   if (process.env.FEEDCRAFT_SCREENSHOTS) await page.screenshot({ path: testInfo.outputPath("evaluation.png"), fullPage: true });
-  await page.getByRole("link", { name: "Policy Simulator" }).click();
+  await navigate(page, "Policy Simulator");
+  await page.getByRole("button", { name: "Play replay" }).click();
+  await expect(page.getByRole("button", { name: "After event 1" })).toHaveAttribute("aria-pressed", "true");
   await page.getByRole("button", { name: "After event 2" }).click();
   const download = page.waitForEvent("download");
   await page.getByRole("button", { name: "Export experiment JSON" }).click();
@@ -43,7 +54,7 @@ test("lab renders data and exports a reproducible synthetic comparison", async (
 
 test("discovery passes automated accessibility checks and fits the viewport", async ({ page }, testInfo) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "Find your next watch." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "The discovery feed." })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);
   const result = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze();
   expect(result.violations).toEqual([]);
@@ -54,12 +65,32 @@ test("the optional API ranks the viewer's synchronized demo events", async ({ pa
   test.skip(!process.env.FEEDCRAFT_TEST_API, "Local API integration fixture is disabled");
   await page.goto("/profile/");
   await page.getByLabel(/Use local API/).check();
-  await page.getByRole("link", { name: "For You", exact: true }).click();
+  await navigate(page, "For You");
   await page.getByRole("button", { name: "♡ Like", exact: true }).click();
   await page.getByRole("button", { name: "Save" }).click();
   await page.getByRole("button", { name: /Refresh for You/ }).click();
   await expect(page.getByText("synthetic-als-v1", { exact: true })).toBeVisible();
-  await page.getByRole("link", { name: "Preferences", exact: true }).click();
+  await navigate(page, "Preferences");
   await page.getByRole("button", { name: "Reset demo" }).click();
   await expect(page.getByText("No activity yet.")).toBeVisible();
+});
+
+test("carousel supports keyboard navigation and touch swipes", async ({ page }, testInfo) => {
+  await page.goto("/feed/");
+  await expect(page.getByRole("button", { name: "Refresh for You" })).toBeEnabled();
+  const carousel = page.getByLabel(/Clip carousel/);
+  if (testInfo.project.name === "mobile") {
+    await carousel.evaluate((target) => {
+      const start = new Touch({ identifier: 1, target, clientX: 270, clientY: 300 });
+      const end = new Touch({ identifier: 1, target, clientX: 110, clientY: 308 });
+      target.dispatchEvent(new TouchEvent("touchstart", { touches: [start], bubbles: true }));
+      target.dispatchEvent(new TouchEvent("touchend", { changedTouches: [end], bubbles: true }));
+    });
+  } else {
+    await carousel.focus();
+    await page.keyboard.press("ArrowRight");
+  }
+  await expect(page.getByRole("button", { name: /Night Shift/, pressed: true })).toBeVisible();
+  await page.getByRole("button", { name: "Previous clip" }).click();
+  await expect(page.getByRole("button", { name: /The Blue Hour/, pressed: true })).toBeVisible();
 });

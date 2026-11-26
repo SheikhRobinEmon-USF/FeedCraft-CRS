@@ -1,6 +1,6 @@
 # FeedCraft
 
-FeedCraft is a recommendation lab for short clips. Launch a fictional profile, watch or react to a few clips, refresh your feed, and inspect how each score was calculated. The Control Room compares three MovieLens baselines and replays a fictional session against two ranking policies.
+FeedCraft is a recommendation lab for short clips. Pick a fictional profile, swipe or use arrow keys in the screening room, and react to clips. Refresh to watch the playlist reorder, or freeze the candidate pool and change the exploration slider to compare ranks. The Control Room compares three MovieLens baselines and replays a fictional session against two ranking policies.
 
 ## Run the browser demo
 

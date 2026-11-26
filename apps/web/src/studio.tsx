@@ -1,11 +1,13 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import Image from "next/image";
+import { Activity, ArrowUpRight, BarChart3, Compass, Film, FlaskConical, Menu, Play, Radar, RefreshCw, SlidersHorizontal, Sparkles, Workflow, X } from "lucide-react";
+import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { asset, defaults, genres, items, personas, rank, type Event, type Kind, type Policy, type Ranking, type Row } from "./rank";
+import { defaults, genres, items, personas, rank, type Event, type Kind, type Policy, type Ranking, type Row } from "./rank";
+import { PolicyControls, ScreeningRoom } from "./screening-room";
 import type { LabView } from "./laboratory";
 
 const Laboratory = dynamic(() => import("./laboratory").then((module) => module.Laboratory));
@@ -15,12 +17,38 @@ type State = { persona: string; policy: Policy; events: Event[]; snapshot: Event
 const initial: State = { persona: "cold", policy: defaults, events: [], snapshot: [], live: false };
 const storageKey = "feedcraft-v1";
 const apiRoot = process.env.NEXT_PUBLIC_FEEDCRAFT_API || "";
-const feedMarks: Record<string, string> = { home: "◈", feed: "▤", profile: "◉", why: "≋", models: "◇", evaluation: "▥", simulator: "⊞" };
-const nav: [View, string, string][] = [
-  ["home", "/", "Discover"], ["feed", "/feed/", "For You"], ["profile", "/profile/", "Preferences"],
-  ["why", "/why/current/", "Rank Inspector"], ["models", "/lab/models/", "Models"],
-  ["evaluation", "/lab/evaluation/", "Evaluation"], ["simulator", "/lab/simulator/", "Policy Simulator"],
-];
+const nav = [
+  { view: "home", href: "/", label: "Discover", icon: Compass },
+  { view: "feed", href: "/feed/", label: "For You", icon: Film },
+  { view: "profile", href: "/profile/", label: "Preferences", icon: SlidersHorizontal },
+  { view: "why", href: "/why/current/", label: "Rank Inspector", icon: Radar },
+  { view: "models", href: "/lab/models/", label: "Models", icon: FlaskConical },
+  { view: "evaluation", href: "/lab/evaluation/", label: "Evaluation", icon: BarChart3 },
+  { view: "simulator", href: "/lab/simulator/", label: "Policy Simulator", icon: Workflow },
+] as const;
+const personaIcons = [Compass, Film, Sparkles];
+
+function Navigation({ view, persona, live }: { view: View; persona: string; live: boolean }) {
+  const [expanded, setExpanded] = useState(false);
+  return <header className="site-header">
+    <div className="header-inner">
+      <Link className="brand" href="/" aria-label="FeedCraft home">
+        <span className="brand-mark"><Play size={17} fill="currentColor" /></span><span>Feed<em>Craft</em></span>
+      </Link>
+      <button className="icon-button menu-toggle" type="button" aria-expanded={expanded} aria-controls="primary-nav"
+        aria-label={expanded ? "Close navigation" : "Open navigation"} onClick={() => setExpanded((open) => !open)}>
+        {expanded ? <X size={21} /> : <Menu size={21} />}
+      </button>
+      <nav className={`primary-nav ${expanded ? "expanded" : ""}`} id="primary-nav" aria-label="Main"
+        onKeyDown={(event) => { if (event.key === "Escape") setExpanded(false); }}>
+        {nav.map(({ view: key, href, label, icon: Icon }) => <Link key={key} aria-current={view === key ? "page" : undefined} href={href}
+          onClick={() => setExpanded(false)}><Icon size={16} aria-hidden="true" /><span>{label}</span></Link>)}
+      </nav>
+      <div className="header-session"><span className="mode"><i aria-hidden="true" />{live ? "Local API" : "Browser demo"}</span>
+        <Link className="avatar" href="/profile/" title={persona} aria-label={`Profile: ${persona}`}>{persona.charAt(0)}</Link></div>
+    </div>
+  </header>;
+}
 
 async function api<T>(path: string, body: unknown, token?: string): Promise<T> {
   const response = await fetch(`${apiRoot}/api/${path}`, {
@@ -31,29 +59,9 @@ async function api<T>(path: string, body: unknown, token?: string): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-function Cover({ itemId, priority }: { itemId: string; priority?: boolean }) {
-  const item = items[itemId];
-  return <Image src={asset(itemId, "webp")} className="cover" alt={item.alt} fill sizes="(max-width: 760px) 100vw, 65vw" unoptimized priority={priority} />;
-}
-
-function Player({ id, onEvent }: { id: string; onEvent: (kind: Kind) => void }) {
-  const video = useRef<HTMLVideoElement>(null);
-  useEffect(() => {
-    function pause() { if (document.hidden) video.current?.pause(); }
-    document.addEventListener("visibilitychange", pause);
-    return () => document.removeEventListener("visibilitychange", pause);
-  }, []);
-  return <video ref={video} aria-label={items[id].title} controls playsInline autoPlay muted preload="metadata"
-    poster={asset(id, "webp")} onPlay={() => onEvent("play")} onEnded={() => onEvent("finish")}>
-    <source src={asset(id, "mp4")} type="video/mp4" />
-    <track src={asset(id, "vtt")} srcLang="en" label="English descriptions" kind="captions" />
-    Your browser could not play this clip.
-  </video>;
-}
-
 function Inspector({ row, ranking, detailed = false }: { row?: Row; ranking: Ranking; detailed?: boolean }) {
   return <aside className={detailed ? "panel inspector full-inspector" : "panel inspector"} aria-label="Rank inspector">
-    <div className="panel-title"><span aria-hidden="true">≋</span><h2>Rank Inspector</h2>{!detailed && <Link href="/why/current/" className="icon-link" aria-label="Open full rank inspector">Details</Link>}</div>
+    <div className="panel-title"><Radar size={18} aria-hidden="true" /><h2>Rank Inspector</h2>{!detailed && <Link href="/why/current/" className="icon-link" aria-label="Open full rank inspector">Inspect <ArrowUpRight size={14} /></Link>}</div>
     <div className="inspector-body">
       {row ? <>
         <p className="eyebrow">WHY THIS CLIP</p>
@@ -61,11 +69,11 @@ function Inspector({ row, ranking, detailed = false }: { row?: Row; ranking: Ran
         <p className="micro">{ranking.cold_start ? "Cold start · Popularity, exploration, and diversity guide this ranking." :
           row.sources.length ? `Session evidence: ${row.sources.join(", ")}.` : "The current preferences and catalog policy guide this ranking."}</p>
         {!!row.matches.length && <p className="micro">Matches {row.matches.join(" · ")}</p>}
-        <div className="score-head"><h4>Score breakdown</h4><strong>{row.score.toFixed(3)}</strong></div>
+        <div className="score-head"><h4>Score breakdown</h4><motion.strong key={row.score} initial={{ opacity: 0.55 }} animate={{ opacity: 1 }}>{row.score.toFixed(3)}</motion.strong></div>
         <div className="bars">
           {Object.entries(row.trace).map(([label, value]) => <div className="bar-row" key={label}>
             <div><span>{label}</span><code>{value > 0 ? "+" : ""}{value.toFixed(3)}</code></div>
-            <div className="track" aria-hidden="true"><i className={value < 0 ? "negative" : ""} style={{ width: `${Math.abs(value) * 100}%` }} /></div>
+            <div className="track" aria-hidden="true"><motion.i className={value < 0 ? "negative" : ""} initial={false} animate={{ width: `${Math.min(100, Math.abs(value) * 100)}%` }} transition={{ duration: 0.32 }} /></div>
           </div>)}
         </div>
       </> : <p className="muted">No ranked clips match your selection.</p>}
@@ -91,6 +99,7 @@ export default function Studio({ view, item }: { view: View; item?: string }) {
   const [playing, setPlaying] = useState("");
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
+  const [comparison, setComparison] = useState<string[]>([]);
 
   function commit(next: State) {
     stateRef.current = next;
@@ -113,6 +122,12 @@ export default function Studio({ view, item }: { view: View; item?: string }) {
     });
     return () => cancelAnimationFrame(frame);
   }, []);
+
+  useEffect(() => {
+    if (!status) return;
+    const timer = setTimeout(() => setStatus(""), 5500);
+    return () => clearTimeout(timer);
+  }, [status]);
 
   const policy = state.policy;
   const ranking = state.ranking ?? rank(state.snapshot, policy);
@@ -152,6 +167,7 @@ export default function Studio({ view, item }: { view: View; item?: string }) {
     commit({ ...initial, live: existing.live, persona: entry.id,
       policy: { ...defaults, interests: entry.interests, exploration: entry.exploration } });
     select("");
+    setComparison([]);
     setStatus(`${entry.label} session started.`);
     if (launch) router.push("/feed/");
   }
@@ -193,6 +209,7 @@ export default function Studio({ view, item }: { view: View; item?: string }) {
       commit({ ...latest, snapshot: before.events, ranking: updated, token });
       select((updated ?? rank(before.events, latest.policy)).items[0]?.item_id ?? "");
       const previous = before.ranking ?? rank(before.snapshot, before.policy);
+      setComparison(previous.items.map((row) => row.item_id));
       const moved = next.items.filter((row, index) => row.item_id !== previous.items[index]?.item_id).length;
       setStatus(`Feed refreshed · ${next.items.length} ranked clips · ${moved ? `${moved} positions changed` : "same order"}`);
     } catch (error) {
@@ -212,94 +229,71 @@ export default function Studio({ view, item }: { view: View; item?: string }) {
     select(ranking.items[(index + 1) % ranking.items.length]?.item_id ?? "");
   }
 
+  function move(direction: number) {
+    const position = ranking.items.findIndex((row) => row.item_id === heroId);
+    const next = ranking.items[position + direction];
+    if (!next) return;
+    if (view === "watch") router.push(`/watch/${next.item_id}/`);
+    else select(next.item_id);
+  }
+
+  function freeze(active: boolean) {
+    setComparison(active ? ranking.items.map((row) => row.item_id) : []);
+    updatePolicy({ candidate_ids: active ? ranking.candidate_ids : null });
+  }
+
   const toggle = (current: string[], value: string) => current.includes(value) ? current.filter((entry) => entry !== value) : [...current, value];
   const allModes = view === "feed" || view === "home" || view === "watch";
   const labView = view === "models" || view === "evaluation" || view === "simulator";
+  const reaction = state.events.findLast((event) => event.item_id === heroId && (event.event_type === "like" || event.event_type === "dislike"))?.event_type;
+  const feedIntro = view === "home" ? "Short films, ranked for you. Every reaction changes what comes next." :
+    view === "watch" ? hero?.description : "Watch, react, and refresh to see what moves in your queue.";
 
-  return <div className="studio">
+  return <MotionConfig reducedMotion="user"><div className="studio">
     <a className="skip-link" href="#content">Skip to content</a>
-    <nav className="sidebar" aria-label="Main">
-      <Link className="brand" href="/"><span className="brand-mark" aria-hidden="true" /><span>Feed<span>Craft</span><small>RECOMMENDATION LAB</small></span></Link>
-      <div className="navigation">
-        <p>WATCH</p>
-        {nav.slice(0, 3).map(([key, href, label]) => <Link key={key} aria-current={view === key ? "page" : undefined} href={href}>
-          <span aria-hidden="true">{feedMarks[key]}</span>{label}</Link>)}
-        <p>CONTROL ROOM</p>
-        {nav.slice(3).map(([key, href, label]) => <Link key={key} aria-current={view === key ? "page" : undefined} href={href}>
-          <span aria-hidden="true">{feedMarks[key]}</span>{label}</Link>)}
-      </div>
-      <div className="sidebar-footer"><span className="avatar" aria-hidden="true">{persona.label.charAt(0)}</span>
-        <div><strong>{persona.label}</strong><small>Fictional profile</small></div></div>
-    </nav>
-    <div className="surface">
-      <header className="topbar">
-        <span>{labView || view === "why" ? "CONTROL ROOM" : "DISCOVERY STUDIO"}</span>
-        <span className="mode"><i aria-hidden="true" />{state.live ? "Local API enabled" : "Browser demo"}</span>
-      </header>
-      <main id="content" className="content" tabIndex={-1}>
+    <Navigation view={view} persona={persona.label} live={state.live} />
+    <main id="content" className="content" tabIndex={-1}>
         {allModes && <>
-          <div className="intro">
-            <div><p className="eyebrow accent">{view === "watch" ? "CLIP DETAIL" : "THE DISCOVERY FEED"}</p>
-              <h1>{view === "home" ? "Find your next watch." : view === "watch" ? hero?.title : "For You"}</h1>
-              <p>{view === "watch" ? hero?.description : "Watch, react, and see how your feedback reshapes the feed."}</p></div>
-            {view !== "watch" && <button className="primary" type="button" onClick={refresh} disabled={busy || !ready || feedback === 1}>
-              {busy ? "Refreshing…" : "↻  Refresh for You"}</button>}
+          <div className="intro feed-intro">
+            <div><p className="eyebrow accent"><span className="section-line" />{view === "watch" ? "THE SCREENING ROOM" : "DISCOVERY STUDIO"}</p>
+              <h1>{view === "home" ? <>The <em>discovery</em> feed.</> : view === "watch" ? hero?.title : "For You"}</h1>
+              <p>{feedIntro}</p></div>
+            {view !== "watch" && <div className="refresh-box">
+              <button className="primary refresh-button" type="button" onClick={refresh} disabled={busy || !ready || feedback === 1}>
+                <RefreshCw size={16} className={busy ? "spinning" : undefined} aria-hidden="true" />
+                {busy ? "Refreshing…" : "Refresh for You"}
+                {feedback > 0 && <span className="pending-count" aria-label={`${feedback} pending signals`}>{feedback}</span>}
+              </button>
+              {feedback === 1 && <small>One more interaction to refresh</small>}
+            </div>}
           </div>
-          {view === "home" && <section className="persona-strip" aria-label="Launch demo profile">
-            {personas.map((entry) => <button type="button" key={entry.id} onClick={() => choose(entry.id, true)} disabled={!ready || busy}>
-              <span aria-hidden="true">{entry.id === "cold" ? "○" : entry.id === "focused" ? "◎" : "✧"}</span>
-              <span><strong>{entry.label}</strong><small>{entry.description}</small></span>
-            </button>)}
-          </section>}
-          <div className="feed-layout">
-            <div className="feed-column">
-              {hero ? <>
-                <article className="hero">
-                  {playing === hero.id ? <Player id={hero.id} onEvent={(kind) => record(hero.id, kind)} /> : <>
-                    <Cover itemId={hero.id} priority />
-                    <div className="hero-shade" />
-                    <span className="clip-label">SIMULATED CLIP</span>
-                    <button className="play" type="button" aria-label={`Play ${hero.title}`} onClick={() => setPlaying(hero.id)} />
-                    <div className="hero-copy"><div>{hero.genres.join(" / ")} <span>•</span> {hero.seconds}s</div>
-                      <h2>{hero.title}</h2><p>{hero.description}</p>
-                    </div>
-                  </>}
-                </article>
-                <div className="actions" aria-label="Clip feedback">
-                  <button type="button" onClick={() => record(hero.id, "like")}>♡ Like</button>
-                  <button type="button" onClick={() => record(hero.id, "dislike")}>Dislike</button>
-                  <button type="button" onClick={() => skip(hero.id)}>Skip</button>
-                  <button type="button" aria-pressed={saved.has(hero.id)} onClick={() => record(hero.id, saved.has(hero.id) ? "unsave" : "save")}>
-                    {saved.has(hero.id) ? "✓ Saved" : "＋ Save"}</button>
-                  {view !== "watch" ? <Link href={`/watch/${hero.id}/`}>Clip details</Link> : <Link href="/feed/">Back to feed</Link>}
-                </div>
-              </> : <div className="panel empty"><h2>No clips match your filters</h2><Link href="/profile/">Change preferences</Link></div>}
-              <div className="policy panel">
-                <div><label htmlFor="feed-exploration">Exploration</label><output htmlFor="feed-exploration">{Math.round(policy.exploration * 100)}%</output></div>
-                <input id="feed-exploration" type="range" min="0" max="1" step="0.05" value={policy.exploration} onChange={(event) => updatePolicy({ exploration: Number(event.target.value) })} />
-                <div className="scale"><span>Familiar</span><span>Exploratory</span></div>
-                <label className="check"><input type="checkbox" checked={policy.candidate_ids !== null}
-                  onChange={(event) => updatePolicy({ candidate_ids: event.target.checked ? ranking.candidate_ids : null })} /> Freeze candidate pool</label>
-              </div>
-              <div className="queue-head"><h2>{view === "watch" ? "Related clips" : "Up next"}</h2><span>{ranking.items.length} ranked</span></div>
-              <div className="queue" aria-label="Ranked clips">
-                {ranking.items.filter((row) => row.item_id !== hero?.id).map((row) => {
-                  const entry = items[row.item_id];
-                  return view === "watch" ? <Link className="tile" key={entry.id} href={`/watch/${entry.id}/`}>
-                    <div><Cover itemId={entry.id} /></div><strong>{entry.title}</strong><small>{entry.genres[0]}</small>
-                  </Link> : <button className="tile" key={entry.id} type="button" onClick={() => select(entry.id)}>
-                    <div><Cover itemId={entry.id} /><span>#{row.rank}</span></div><strong>{entry.title}</strong><small>{entry.genres[0]}</small>
+          <ScreeningRoom heroId={heroId} ranking={ranking} comparison={comparison} playing={!!hero && playing === hero.id}
+            watch={view === "watch"} saved={!!hero && saved.has(hero.id)} reaction={reaction}
+            onPlay={(active) => setPlaying(active && heroId ? heroId : "")} onSelect={select} onMove={move}
+            onEvent={record} onSkip={skip} />
+          <div className="section-header"><h2>Tune your recommendations</h2><Link href="/profile/">All preferences <ArrowUpRight size={15} /></Link></div>
+          <div className="workspace-grid">
+            <div className="tuning-column">
+              <PolicyControls policy={policy} onChange={updatePolicy} freeze={freeze} />
+              <section className="panel activity"><div className="panel-title"><Activity size={17} /><h2>Session signals</h2>
+                <span className="panel-meta">{feedback} pending</span></div>
+                <div className="panel-body">{state.events.length ? <ul className="signal-list">
+                  {state.events.slice(-4).toReversed().map((event) => <li key={event.event_id}><span>{items[event.item_id].title}</span><code>{event.event_type}</code></li>)}
+                </ul> : <p className="micro">Watch or react to a clip to start shaping your feed.</p>}</div>
+              </section>
+            </div>
+            <Inspector ranking={ranking} row={view === "watch" ? ranking.items.find((row) => row.item_id === heroId) : currentRow} />
+            <section className="panel persona-panel" aria-label="Launch demo profile">
+              <div className="panel-title"><Compass size={17} /><h2>Demo profiles</h2></div>
+              <div className="persona-strip">
+                {personas.map((entry, index) => {
+                  const Icon = personaIcons[index];
+                  return <button type="button" key={entry.id} aria-pressed={state.persona === entry.id} onClick={() => choose(entry.id, true)} disabled={!ready || busy}>
+                    <Icon size={20} /><span><strong>{entry.label}</strong><small>{entry.description}</small></span><ArrowUpRight size={14} />
                   </button>;
                 })}
               </div>
-            </div>
-            <div className="feed-aside">
-              <Inspector ranking={ranking} row={view === "watch" ? ranking.items.find((row) => row.item_id === heroId) : currentRow} />
-              <div className="panel activity">
-                <h2>Session activity</h2><p>{feedback ? `${feedback} new ${feedback === 1 ? "interaction" : "interactions"}` : "No new feedback"}</p>
-                <p className="micro">{feedback === 1 ? "Add one more interaction to refresh." : "Likes, skips, saves, and plays shape the next refresh."}</p>
-              </div>
-            </div>
+            </section>
           </div>
         </>}
         {view === "profile" && <>
@@ -336,9 +330,12 @@ export default function Studio({ view, item }: { view: View; item?: string }) {
         </>}
         {labView && <Laboratory view={view} policy={policy} />}
         <p className="sr-only" role="status">{status}</p>
-        {status && <p className="status-note">{status}</p>}
+        <AnimatePresence initial={false}>
+          {status && <motion.div key={status} className="status-note" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }}>
+            <span>{status}</span><button type="button" aria-label="Dismiss notification" onClick={() => setStatus("")}><X size={16} /></button>
+          </motion.div>}
+        </AnimatePresence>
         <footer className="foot"><span>FeedCraft</span><span>Fictional viewing sessions · Original simulated media</span></footer>
-      </main>
-    </div>
-  </div>;
+    </main>
+  </div></MotionConfig>;
 }

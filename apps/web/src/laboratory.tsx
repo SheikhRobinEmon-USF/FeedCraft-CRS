@@ -1,5 +1,7 @@
 "use client";
 
+import { Download, Pause, Play } from "lucide-react";
+import { motion, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { BarChart } from "echarts/charts";
 import { AriaComponent, GridComponent, TooltipComponent } from "echarts/components";
@@ -17,28 +19,38 @@ const metricLabels = {
   diversity: "Genre diversity", novelty_bits: "Novelty (bits)", head_share: "Head exposure",
   head_recall: "Head recall", tail_recall: "Long-tail recall",
 } as const;
+const chartMetrics = ["ndcg", "recall", "mrr", "coverage", "diversity"] as const;
+type ChartMetric = typeof chartMetrics[number];
 const display = (value: number | null) => value === null ? "—" : value.toFixed(3);
 const date = (timestamp: number) => new Date(timestamp * 1000).toISOString().slice(0, 10);
 
-function MetricChart({ report, split }: { report: Report; split: "test" | "validation" }) {
+function MetricChart({ report, split, metric }: { report: Report; split: "test" | "validation"; metric: ChartMetric }) {
   const host = useRef<HTMLDivElement>(null);
+  const instance = useRef<ReturnType<typeof init>>(null);
+  const reduced = useReducedMotion();
   useEffect(() => {
     if (!host.current) return;
     const chart = init(host.current, null, { renderer: "svg" });
-    chart.setOption({
-      aria: { enabled: true },
-      animation: false,
-      grid: { left: 110, right: 36, top: 12, bottom: 28 },
-      tooltip: { trigger: "axis", valueFormatter: (value: unknown) => Number(value).toFixed(3) },
-      yAxis: { type: "category", inverse: true, data: modelKeys.map((name) => modelTitles[name]), axisLabel: { color: "#c2bdb4" } },
-      xAxis: { type: "value", axisLabel: { color: "#a7a29b" }, splitLine: { lineStyle: { color: "#34322e" } } },
-      series: [{ name: `nDCG@${report.k}`, type: "bar", barMaxWidth: 24,
-        data: modelKeys.map((name) => ({ value: report[split][name].ndcg, itemStyle: { color: name === report.selected ? "#ff844f" : "#7e8196" } })) }],
-    });
+    instance.current = chart;
     const observer = new ResizeObserver(() => chart.resize());
     observer.observe(host.current);
-    return () => { observer.disconnect(); chart.dispose(); };
-  }, [report, split]);
+    return () => { observer.disconnect(); chart.dispose(); instance.current = null; };
+  }, []);
+  useEffect(() => {
+    instance.current?.setOption({
+      aria: { enabled: true },
+      animation: !reduced,
+      animationDuration: 280,
+      animationDurationUpdate: 320,
+      grid: { left: 96, right: 24, top: 12, bottom: 28 },
+      tooltip: { trigger: "axis", valueFormatter: (value: unknown) => Number(value).toFixed(3) },
+      yAxis: { type: "category", inverse: true, data: modelKeys.map((name) => modelTitles[name]), axisLabel: { color: "#e2d7cc" } },
+      xAxis: { type: "value", axisLabel: { color: "#bcb1a7" }, splitLine: { lineStyle: { color: "#35302b" } } },
+      series: [{ name: metricLabels[metric], type: "bar", barMaxWidth: 22,
+        data: modelKeys.map((name) => ({ value: report[split][name][metric],
+          itemStyle: { color: name === report.selected ? "#ff8c59" : "#a19ab4", borderRadius: [0, 5, 5, 0] } })) }],
+    });
+  }, [report, split, metric, reduced]);
   return <div ref={host} className="chart" aria-hidden="true" />;
 }
 
@@ -46,6 +58,7 @@ function Evaluations({ view }: { view: "models" | "evaluation" }) {
   const [report, setReport] = useState<Report>();
   const [error, setError] = useState(false);
   const [split, setSplit] = useState<"test" | "validation">("test");
+  const [metric, setMetric] = useState<ChartMetric>("ndcg");
   useEffect(() => {
     const controller = new AbortController();
     fetch(asset("evaluation", "json"), { signal: controller.signal }).then((response) => {
@@ -64,8 +77,17 @@ function Evaluations({ view }: { view: "models" | "evaluation" }) {
       <label>Split <select value={split} onChange={(event) => setSplit(event.target.value as "test" | "validation")}>
         <option value="test">Test</option><option value="validation">Validation</option></select></label>
     </section>
-    <section className="panel settings"><h2>Ranking quality · nDCG@{report.k}</h2>
-      <MetricChart report={report} split={split} />
+    <section className="panel settings">
+      <div className="lab-panel-head"><h2>Ranking quality</h2><label>Chart metric <select value={metric} onChange={(event) => setMetric(event.target.value as ChartMetric)}>
+        {chartMetrics.map((key) => <option key={key} value={key}>{metricLabels[key]}</option>)}
+      </select></label></div>
+      <div className="model-tiles">
+        {modelKeys.map((name) => <div key={name}><span>{modelTitles[name]}</span>
+          <motion.strong key={`${split}-${metric}`} initial={{ opacity: .5 }} animate={{ opacity: 1 }}>{display(models[name][metric])}</motion.strong>
+          <small>{name === report.selected ? "Selected on validation" : metricLabels[metric]}</small>
+        </div>)}
+      </div>
+      <MetricChart report={report} split={split} metric={metric} />
       <div className="table-wrap"><table><caption>MovieLens {split} metrics at {report.k}</caption><thead><tr>
         <th scope="col">Metric</th>{modelKeys.map((name) => <th scope="col" key={name}>{modelTitles[name]}</th>)}</tr></thead>
         <tbody>{Object.entries(metricLabels).map(([key, label]) =>
@@ -119,6 +141,17 @@ function summarize(result: Ranking, preferred: Set<string>) {
 
 function Simulator({ policy }: { policy: Policy }) {
   const [step, setStep] = useState(seedEvents.length);
+  const [running, setRunning] = useState(false);
+  const reduced = useReducedMotion();
+  useEffect(() => {
+    if (!running) return;
+    const timer = setTimeout(() => {
+      const next = step + 1;
+      setStep(next);
+      if (next >= seedEvents.length) setRunning(false);
+    }, 900);
+    return () => clearTimeout(timer);
+  }, [running, step]);
   const [exploration, setExploration] = useState(0.8);
   const [diversity, setDiversity] = useState(policy.diversity_lambda);
   const events = seedEvents.slice(0, step);
@@ -144,10 +177,17 @@ function Simulator({ policy }: { policy: Policy }) {
   }
   return <div className="lab-grid">
     <section className="panel settings">
-      <p className="eyebrow accent">SYNTHETIC REPLAY</p><h2>Session events</h2>
+      <p className="eyebrow accent">SYNTHETIC REPLAY</p>
+      <div className="lab-panel-head"><h2>Session events</h2>
+        <button className="button" type="button" onClick={() => {
+          if (running) { setRunning(false); return; }
+          if (step >= seedEvents.length) setStep(0);
+          setRunning(true);
+        }}>{running ? <Pause size={15} /> : <Play size={15} />}{running ? "Pause replay" : "Play replay"}</button>
+      </div>
       <p>Move through the same fictional session while both policies rank the same {low.candidate_ids.length} eligible clips.</p>
       <div className="button-group">{Array.from({ length: seedEvents.length + 1 }, (_, index) =>
-        <button key={index} type="button" aria-pressed={step === index} onClick={() => setStep(index)}>{index === 0 ? "Before feedback" : `After event ${index}`}</button>)}</div>
+        <button key={index} type="button" aria-pressed={step === index} onClick={() => { setRunning(false); setStep(index); }}>{index === 0 ? "Before feedback" : `After event ${index}`}</button>)}</div>
       <ol className="trace-list">{events.map((event, index) => <li key={index}>{items[event.item_id].title}<span>{event.event_type}</span></li>)}</ol>
       <div className="slider-pair">
         <label>Exploration <output>{Math.round(exploration * 100)}%</output><input type="range" min="0" max="1" step="0.05" value={exploration} onChange={(event) => setExploration(Number(event.target.value))} /></label>
@@ -156,12 +196,12 @@ function Simulator({ policy }: { policy: Policy }) {
     </section>
     <div className="config-grid">{comparisons.map(({ name, ranking, metrics }) => <section className="panel settings" key={name}>
       <h2>{name}</h2><ol className="trace-list">{ranking.items.map((row) =>
-        <li key={row.item_id}>#{row.rank} {items[row.item_id].title}<code>{row.score.toFixed(3)}</code></li>)}</ol>
+        <motion.li layout={reduced ? false : "position"} key={row.item_id}>#{row.rank} {items[row.item_id].title}<code>{row.score.toFixed(3)}</code></motion.li>)}</ol>
       <dl className="policy-metrics">{Object.entries(labels).map(([key, label]) =>
         <div key={key}><dt>{label}</dt><dd>{Math.round(metrics[key as keyof typeof labels] * 100)}%</dd></div>)}</dl>
     </section>)}</div>
     <section className="panel settings"><h2>Experiment card</h2><p>Interest match measures overlap with genres from liked or finished clips. Novelty uses preset fictional popularity. Both are simulation assumptions.</p>
-      <button type="button" className="primary" onClick={exportCard}>Export experiment JSON</button></section>
+      <button type="button" className="primary" onClick={exportCard}><Download size={16} /> Export experiment JSON</button></section>
   </div>;
 }
 
