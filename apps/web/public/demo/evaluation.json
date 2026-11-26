@@ -1,0 +1,685 @@
+{
+  "dataset": "MovieLens 100K",
+  "dataset_hash": "sha256:50d2a982c66986937beb9ffb3aa76efe955bf3d5c6b761f4e3a7cd717c6a3229",
+  "version": "ml100k-v1",
+  "k": 10,
+  "seed": 42,
+  "validation_cutoff": 887039271,
+  "test_cutoff": 891036423,
+  "events": {
+    "train": 69997,
+    "validation": 15003,
+    "test": 15000
+  },
+  "selected": "popularity",
+  "validation": {
+    "popularity": {
+      "users": 104,
+      "cold_users": 134,
+      "cold_positive_items": 101,
+      "positive_pairs": 7939,
+      "catalog_size": 1573,
+      "coverage": 0.04259376986649714,
+      "recall": 0.06973648821159394,
+      "ndcg": 0.12386013193991412,
+      "mrr": 0.2333028083028083,
+      "hit_rate": 0.38461538461538464,
+      "diversity": 0.793683608058608,
+      "novelty_bits": 7.619237317395879,
+      "head_share": 1.0,
+      "head_recall": 0.11551711467597424,
+      "head_recall_users": 92,
+      "tail_recall": 0.0,
+      "tail_recall_users": 77,
+      "ndcg_ci95": [
+        0.08433352114414637,
+        0.17130959585328984
+      ],
+      "activity": {
+        "sparse": {
+          "users": 6,
+          "ndcg": 0.09039400257000584
+        },
+        "active": {
+          "users": 98,
+          "ndcg": 0.12590907863603093
+        }
+      },
+      "by_genre": {
+        "Unknown": {
+          "positive_pairs": 0,
+          "recall": null
+        },
+        "Action": {
+          "positive_pairs": 359,
+          "recall": 0.13370473537604458
+        },
+        "Adventure": {
+          "positive_pairs": 186,
+          "recall": 0.16666666666666666
+        },
+        "Animation": {
+          "positive_pairs": 43,
+          "recall": 0.06976744186046512
+        },
+        "Children": {
+          "positive_pairs": 92,
+          "recall": 0.043478260869565216
+        },
+        "Comedy": {
+          "positive_pairs": 384,
+          "recall": 0.036458333333333336
+        },
+        "Crime": {
+          "positive_pairs": 103,
+          "recall": 0.11650485436893204
+        },
+        "Documentary": {
+          "positive_pairs": 12,
+          "recall": 0.0
+        },
+        "Drama": {
+          "positive_pairs": 592,
+          "recall": 0.08108108108108109
+        },
+        "Fantasy": {
+          "positive_pairs": 15,
+          "recall": 0.06666666666666667
+        },
+        "Film-Noir": {
+          "positive_pairs": 23,
+          "recall": 0.043478260869565216
+        },
+        "Horror": {
+          "positive_pairs": 68,
+          "recall": 0.029411764705882353
+        },
+        "Musical": {
+          "positive_pairs": 70,
+          "recall": 0.014285714285714285
+        },
+        "Mystery": {
+          "positive_pairs": 71,
+          "recall": 0.04225352112676056
+        },
+        "Romance": {
+          "positive_pairs": 300,
+          "recall": 0.10666666666666667
+        },
+        "Sci-Fi": {
+          "positive_pairs": 158,
+          "recall": 0.189873417721519
+        },
+        "Thriller": {
+          "positive_pairs": 277,
+          "recall": 0.07942238267148015
+        },
+        "War": {
+          "positive_pairs": 118,
+          "recall": 0.211864406779661
+        },
+        "Western": {
+          "positive_pairs": 35,
+          "recall": 0.0
+        }
+      }
+    },
+    "itemknn": {
+      "users": 104,
+      "cold_users": 134,
+      "cold_positive_items": 101,
+      "positive_pairs": 7939,
+      "catalog_size": 1573,
+      "coverage": 0.08264462809917356,
+      "recall": 0.06834736179736493,
+      "ndcg": 0.12004405408589272,
+      "mrr": 0.22644993894993898,
+      "hit_rate": 0.40384615384615385,
+      "diversity": 0.8082033475783474,
+      "novelty_bits": 7.967666219387866,
+      "head_share": 0.9903846153846154,
+      "head_recall": 0.12085956422874591,
+      "head_recall_users": 92,
+      "tail_recall": 0.004329004329004329,
+      "tail_recall_users": 77,
+      "ndcg_ci95": [
+        0.08424773457973234,
+        0.16157426963936977
+      ],
+      "activity": {
+        "sparse": {
+          "users": 6,
+          "ndcg": 0.23208600092434842
+        },
+        "active": {
+          "users": 98,
+          "ndcg": 0.11318434305496686
+        }
+      },
+      "by_genre": {
+        "Unknown": {
+          "positive_pairs": 0,
+          "recall": null
+        },
+        "Action": {
+          "positive_pairs": 359,
+          "recall": 0.1532033426183844
+        },
+        "Adventure": {
+          "positive_pairs": 186,
+          "recall": 0.15591397849462366
+        },
+        "Animation": {
+          "positive_pairs": 43,
+          "recall": 0.046511627906976744
+        },
+        "Children": {
+          "positive_pairs": 92,
+          "recall": 0.043478260869565216
+        },
+        "Comedy": {
+          "positive_pairs": 384,
+          "recall": 0.046875
+        },
+        "Crime": {
+          "positive_pairs": 103,
+          "recall": 0.07766990291262135
+        },
+        "Documentary": {
+          "positive_pairs": 12,
+          "recall": 0.0
+        },
+        "Drama": {
+          "positive_pairs": 592,
+          "recall": 0.07601351351351351
+        },
+        "Fantasy": {
+          "positive_pairs": 15,
+          "recall": 0.06666666666666667
+        },
+        "Film-Noir": {
+          "positive_pairs": 23,
+          "recall": 0.08695652173913043
+        },
+        "Horror": {
+          "positive_pairs": 68,
+          "recall": 0.058823529411764705
+        },
+        "Musical": {
+          "positive_pairs": 70,
+          "recall": 0.05714285714285714
+        },
+        "Mystery": {
+          "positive_pairs": 71,
+          "recall": 0.09859154929577464
+        },
+        "Romance": {
+          "positive_pairs": 300,
+          "recall": 0.09333333333333334
+        },
+        "Sci-Fi": {
+          "positive_pairs": 158,
+          "recall": 0.1962025316455696
+        },
+        "Thriller": {
+          "positive_pairs": 277,
+          "recall": 0.10469314079422383
+        },
+        "War": {
+          "positive_pairs": 118,
+          "recall": 0.1864406779661017
+        },
+        "Western": {
+          "positive_pairs": 35,
+          "recall": 0.0
+        }
+      }
+    },
+    "als": {
+      "users": 104,
+      "cold_users": 134,
+      "cold_positive_items": 101,
+      "positive_pairs": 7939,
+      "catalog_size": 1573,
+      "coverage": 0.2574698029243484,
+      "recall": 0.0947284345587307,
+      "ndcg": 0.11231007829187771,
+      "mrr": 0.20846306471306472,
+      "hit_rate": 0.47115384615384615,
+      "diversity": 0.7845454314204314,
+      "novelty_bits": 9.082464101361431,
+      "head_share": 0.7971153846153847,
+      "head_recall": 0.131112277021566,
+      "head_recall_users": 92,
+      "tail_recall": 0.016786555132419795,
+      "tail_recall_users": 77,
+      "ndcg_ci95": [
+        0.08172992358768437,
+        0.14508912263650142
+      ],
+      "activity": {
+        "sparse": {
+          "users": 6,
+          "ndcg": 0.1612101357514668
+        },
+        "active": {
+          "users": 98,
+          "ndcg": 0.10931619722292325
+        }
+      },
+      "by_genre": {
+        "Unknown": {
+          "positive_pairs": 0,
+          "recall": null
+        },
+        "Action": {
+          "positive_pairs": 359,
+          "recall": 0.0947075208913649
+        },
+        "Adventure": {
+          "positive_pairs": 186,
+          "recall": 0.0913978494623656
+        },
+        "Animation": {
+          "positive_pairs": 43,
+          "recall": 0.0
+        },
+        "Children": {
+          "positive_pairs": 92,
+          "recall": 0.021739130434782608
+        },
+        "Comedy": {
+          "positive_pairs": 384,
+          "recall": 0.041666666666666664
+        },
+        "Crime": {
+          "positive_pairs": 103,
+          "recall": 0.05825242718446602
+        },
+        "Documentary": {
+          "positive_pairs": 12,
+          "recall": 0.08333333333333333
+        },
+        "Drama": {
+          "positive_pairs": 592,
+          "recall": 0.0625
+        },
+        "Fantasy": {
+          "positive_pairs": 15,
+          "recall": 0.06666666666666667
+        },
+        "Film-Noir": {
+          "positive_pairs": 23,
+          "recall": 0.0
+        },
+        "Horror": {
+          "positive_pairs": 68,
+          "recall": 0.029411764705882353
+        },
+        "Musical": {
+          "positive_pairs": 70,
+          "recall": 0.014285714285714285
+        },
+        "Mystery": {
+          "positive_pairs": 71,
+          "recall": 0.11267605633802817
+        },
+        "Romance": {
+          "positive_pairs": 300,
+          "recall": 0.1
+        },
+        "Sci-Fi": {
+          "positive_pairs": 158,
+          "recall": 0.10126582278481013
+        },
+        "Thriller": {
+          "positive_pairs": 277,
+          "recall": 0.08303249097472924
+        },
+        "War": {
+          "positive_pairs": 118,
+          "recall": 0.1016949152542373
+        },
+        "Western": {
+          "positive_pairs": 35,
+          "recall": 0.0
+        }
+      }
+    }
+  },
+  "test": {
+    "popularity": {
+      "users": 76,
+      "cold_users": 135,
+      "cold_positive_items": 59,
+      "positive_pairs": 8471,
+      "catalog_size": 1628,
+      "coverage": 0.04668304668304668,
+      "recall": 0.1126923061249365,
+      "ndcg": 0.1554208392908642,
+      "mrr": 0.23555242272347532,
+      "hit_rate": 0.4868421052631579,
+      "diversity": 0.7921411166805904,
+      "novelty_bits": 7.649090074848184,
+      "head_share": 1.0,
+      "head_recall": 0.17823250814576247,
+      "head_recall_users": 66,
+      "tail_recall": 0.0,
+      "tail_recall_users": 56,
+      "ndcg_ci95": [
+        0.11016568014709341,
+        0.20681631884742574
+      ],
+      "activity": {
+        "sparse": {
+          "users": 5,
+          "ndcg": 0.261636058063388
+        },
+        "active": {
+          "users": 71,
+          "ndcg": 0.14794089430688367
+        }
+      },
+      "by_genre": {
+        "Unknown": {
+          "positive_pairs": 0,
+          "recall": null
+        },
+        "Action": {
+          "positive_pairs": 313,
+          "recall": 0.12779552715654952
+        },
+        "Adventure": {
+          "positive_pairs": 169,
+          "recall": 0.14201183431952663
+        },
+        "Animation": {
+          "positive_pairs": 49,
+          "recall": 0.16326530612244897
+        },
+        "Children": {
+          "positive_pairs": 84,
+          "recall": 0.09523809523809523
+        },
+        "Comedy": {
+          "positive_pairs": 391,
+          "recall": 0.03324808184143223
+        },
+        "Crime": {
+          "positive_pairs": 106,
+          "recall": 0.2169811320754717
+        },
+        "Documentary": {
+          "positive_pairs": 6,
+          "recall": 0.0
+        },
+        "Drama": {
+          "positive_pairs": 578,
+          "recall": 0.10207612456747404
+        },
+        "Fantasy": {
+          "positive_pairs": 14,
+          "recall": 0.0
+        },
+        "Film-Noir": {
+          "positive_pairs": 30,
+          "recall": 0.13333333333333333
+        },
+        "Horror": {
+          "positive_pairs": 39,
+          "recall": 0.0
+        },
+        "Musical": {
+          "positive_pairs": 69,
+          "recall": 0.0
+        },
+        "Mystery": {
+          "positive_pairs": 68,
+          "recall": 0.058823529411764705
+        },
+        "Romance": {
+          "positive_pairs": 254,
+          "recall": 0.11023622047244094
+        },
+        "Sci-Fi": {
+          "positive_pairs": 133,
+          "recall": 0.24060150375939848
+        },
+        "Thriller": {
+          "positive_pairs": 258,
+          "recall": 0.08527131782945736
+        },
+        "War": {
+          "positive_pairs": 127,
+          "recall": 0.2125984251968504
+        },
+        "Western": {
+          "positive_pairs": 23,
+          "recall": 0.0
+        }
+      }
+    },
+    "itemknn": {
+      "users": 76,
+      "cold_users": 135,
+      "cold_positive_items": 59,
+      "positive_pairs": 8471,
+      "catalog_size": 1628,
+      "coverage": 0.08476658476658476,
+      "recall": 0.07214795013392018,
+      "ndcg": 0.15946892797732967,
+      "mrr": 0.2768222639933166,
+      "hit_rate": 0.40789473684210525,
+      "diversity": 0.808195140629351,
+      "novelty_bits": 8.017147293776578,
+      "head_share": 0.9907894736842104,
+      "head_recall": 0.11167016713768528,
+      "head_recall_users": 66,
+      "tail_recall": 0.0,
+      "tail_recall_users": 56,
+      "ndcg_ci95": [
+        0.10591836249608659,
+        0.2196222477398304
+      ],
+      "activity": {
+        "sparse": {
+          "users": 5,
+          "ndcg": 0.259613317649211
+        },
+        "active": {
+          "users": 71,
+          "ndcg": 0.1524165061694507
+        }
+      },
+      "by_genre": {
+        "Unknown": {
+          "positive_pairs": 0,
+          "recall": null
+        },
+        "Action": {
+          "positive_pairs": 313,
+          "recall": 0.14376996805111822
+        },
+        "Adventure": {
+          "positive_pairs": 169,
+          "recall": 0.14201183431952663
+        },
+        "Animation": {
+          "positive_pairs": 49,
+          "recall": 0.02040816326530612
+        },
+        "Children": {
+          "positive_pairs": 84,
+          "recall": 0.03571428571428571
+        },
+        "Comedy": {
+          "positive_pairs": 391,
+          "recall": 0.05115089514066496
+        },
+        "Crime": {
+          "positive_pairs": 106,
+          "recall": 0.08490566037735849
+        },
+        "Documentary": {
+          "positive_pairs": 6,
+          "recall": 0.0
+        },
+        "Drama": {
+          "positive_pairs": 578,
+          "recall": 0.08304498269896193
+        },
+        "Fantasy": {
+          "positive_pairs": 14,
+          "recall": 0.07142857142857142
+        },
+        "Film-Noir": {
+          "positive_pairs": 30,
+          "recall": 0.06666666666666667
+        },
+        "Horror": {
+          "positive_pairs": 39,
+          "recall": 0.05128205128205128
+        },
+        "Musical": {
+          "positive_pairs": 69,
+          "recall": 0.014492753623188406
+        },
+        "Mystery": {
+          "positive_pairs": 68,
+          "recall": 0.029411764705882353
+        },
+        "Romance": {
+          "positive_pairs": 254,
+          "recall": 0.10236220472440945
+        },
+        "Sci-Fi": {
+          "positive_pairs": 133,
+          "recall": 0.24060150375939848
+        },
+        "Thriller": {
+          "positive_pairs": 258,
+          "recall": 0.10465116279069768
+        },
+        "War": {
+          "positive_pairs": 127,
+          "recall": 0.23622047244094488
+        },
+        "Western": {
+          "positive_pairs": 23,
+          "recall": 0.0
+        }
+      }
+    },
+    "als": {
+      "users": 76,
+      "cold_users": 135,
+      "cold_positive_items": 59,
+      "positive_pairs": 8471,
+      "catalog_size": 1628,
+      "coverage": 0.21928746928746928,
+      "recall": 0.15615186618023955,
+      "ndcg": 0.183734039269607,
+      "mrr": 0.2629699248120301,
+      "hit_rate": 0.5131578947368421,
+      "diversity": 0.7860996240601503,
+      "novelty_bits": 9.094118691372273,
+      "head_share": 0.8197368421052631,
+      "head_recall": 0.21121508726180765,
+      "head_recall_users": 66,
+      "tail_recall": 0.03639652127124493,
+      "tail_recall_users": 56,
+      "ndcg_ci95": [
+        0.13250105808263496,
+        0.24015930242996686
+      ],
+      "activity": {
+        "sparse": {
+          "users": 5,
+          "ndcg": 0.3760856617081962
+        },
+        "active": {
+          "users": 71,
+          "ndcg": 0.17018815036548102
+        }
+      },
+      "by_genre": {
+        "Unknown": {
+          "positive_pairs": 0,
+          "recall": null
+        },
+        "Action": {
+          "positive_pairs": 313,
+          "recall": 0.1182108626198083
+        },
+        "Adventure": {
+          "positive_pairs": 169,
+          "recall": 0.11834319526627218
+        },
+        "Animation": {
+          "positive_pairs": 49,
+          "recall": 0.04081632653061224
+        },
+        "Children": {
+          "positive_pairs": 84,
+          "recall": 0.047619047619047616
+        },
+        "Comedy": {
+          "positive_pairs": 391,
+          "recall": 0.06905370843989769
+        },
+        "Crime": {
+          "positive_pairs": 106,
+          "recall": 0.10377358490566038
+        },
+        "Documentary": {
+          "positive_pairs": 6,
+          "recall": 0.0
+        },
+        "Drama": {
+          "positive_pairs": 578,
+          "recall": 0.09688581314878893
+        },
+        "Fantasy": {
+          "positive_pairs": 14,
+          "recall": 0.0
+        },
+        "Film-Noir": {
+          "positive_pairs": 30,
+          "recall": 0.06666666666666667
+        },
+        "Horror": {
+          "positive_pairs": 39,
+          "recall": 0.02564102564102564
+        },
+        "Musical": {
+          "positive_pairs": 69,
+          "recall": 0.028985507246376812
+        },
+        "Mystery": {
+          "positive_pairs": 68,
+          "recall": 0.058823529411764705
+        },
+        "Romance": {
+          "positive_pairs": 254,
+          "recall": 0.11023622047244094
+        },
+        "Sci-Fi": {
+          "positive_pairs": 133,
+          "recall": 0.12781954887218044
+        },
+        "Thriller": {
+          "positive_pairs": 258,
+          "recall": 0.08914728682170543
+        },
+        "War": {
+          "positive_pairs": 127,
+          "recall": 0.14960629921259844
+        },
+        "Western": {
+          "positive_pairs": 23,
+          "recall": 0.0
+        }
+      }
+    }
+  }
+}

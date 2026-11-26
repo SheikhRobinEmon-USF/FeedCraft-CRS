@@ -1,0 +1,93 @@
+{
+  "$defs": {
+    "Policy": {
+      "additionalProperties": false,
+      "properties": {
+        "exploration": {
+          "default": 0.25,
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Exploration",
+          "type": "number"
+        },
+        "diversity_lambda": {
+          "default": 0.22,
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Diversity Lambda",
+          "type": "number"
+        },
+        "interests": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 7,
+          "title": "Interests",
+          "type": "array"
+        },
+        "hidden": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 7,
+          "title": "Hidden",
+          "type": "array"
+        },
+        "intensity": {
+          "default": 3,
+          "maximum": 3,
+          "minimum": 1,
+          "title": "Intensity",
+          "type": "integer"
+        },
+        "exclude_seen": {
+          "default": false,
+          "title": "Exclude Seen",
+          "type": "boolean"
+        },
+        "candidate_ids": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 6,
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Candidate Ids"
+        }
+      },
+      "title": "Policy",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "n": {
+      "default": 6,
+      "maximum": 20,
+      "minimum": 1,
+      "title": "N",
+      "type": "integer"
+    },
+    "ranking_policy": {
+      "$ref": "#/$defs/Policy"
+    },
+    "model_version": {
+      "default": "rules",
+      "enum": [
+        "rules",
+        "als"
+      ],
+      "title": "Model Version",
+      "type": "string"
+    }
+  },
+  "title": "Recommendation",
+  "type": "object"
+}

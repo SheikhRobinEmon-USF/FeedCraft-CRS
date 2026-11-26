@@ -1,0 +1,8 @@
+[
+  {"id":"blue-hour","title":"The Blue Hour","genres":["Nature","Documentary"],"intensity":1,"popularity":0.96,"seconds":12,"description":"Fog works its way through the valley as the last light disappears behind the peaks.","alt":"Fog in an evergreen valley below snowy peaks at dusk"},
+  {"id":"night-shift","title":"Night Shift","genres":["Culture","Art"],"intensity":2,"popularity":0.81,"seconds":12,"description":"A pool of red light gives a rain-soaked street an unexpected after-hours glow.","alt":"Red neon in a laundromat window on a rainy street"},
+  {"id":"the-ascent","title":"The Ascent","genres":["Sports","Nature"],"intensity":3,"popularity":0.76,"seconds":12,"description":"A climber tests their next move on a wall of sunlit sandstone.","alt":"A climber in orange against a red sandstone wall"},
+  {"id":"deep-listening","title":"Deep Listening","genres":["Science","Documentary"],"intensity":1,"popularity":0.71,"seconds":12,"description":"A radio telescope listens to the sky long after the lights have gone out.","alt":"A radio telescope beneath the Milky Way"},
+  {"id":"flour-and-time","title":"Flour & Time","genres":["Food","Culture"],"intensity":1,"popularity":0.60,"seconds":12,"description":"A baker works a loaf by hand in the warmth of a late-night kitchen.","alt":"Hands kneading dough on a flour-dusted wooden table"},
+  {"id":"wild-water","title":"Wild Water","genres":["Nature","Science"],"intensity":2,"popularity":0.48,"seconds":12,"description":"Wind and tide meet a stretch of rugged coastline just below the cliff path.","alt":"Teal surf crashing below misty coastal cliffs"}
+]

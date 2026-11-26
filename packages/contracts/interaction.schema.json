@@ -1,0 +1,36 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "event_id": {
+      "pattern": "^[a-zA-Z0-9_-]{8,64}$",
+      "title": "Event Id",
+      "type": "string"
+    },
+    "item_id": {
+      "maxLength": 40,
+      "minLength": 1,
+      "title": "Item Id",
+      "type": "string"
+    },
+    "event_type": {
+      "enum": [
+        "play",
+        "finish",
+        "skip",
+        "like",
+        "dislike",
+        "save",
+        "unsave"
+      ],
+      "title": "Event Type",
+      "type": "string"
+    }
+  },
+  "required": [
+    "event_id",
+    "item_id",
+    "event_type"
+  ],
+  "title": "Event",
+  "type": "object"
+}

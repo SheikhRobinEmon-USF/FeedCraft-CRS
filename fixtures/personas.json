@@ -1,0 +1,5 @@
+[
+  {"id":"cold","label":"Fresh Start","description":"Start with a clean slate.","interests":[],"exploration":0.25},
+  {"id":"focused","label":"Documentary Fan","description":"Look for nature and documentary clips.","interests":["Nature","Documentary"],"exploration":0.15},
+  {"id":"curious","label":"Curious Explorer","description":"Make room for less familiar stories.","interests":["Culture","Science"],"exploration":0.70}
+]

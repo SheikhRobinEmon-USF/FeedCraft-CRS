@@ -221,3 +221,16 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+.venv/
+data/
+artifacts/
+__pycache__/
+.pytest_cache/
+node_modules/
+.next/
+out/
+playwright-report/
+test-results/
+*.tsbuildinfo
+*.db
