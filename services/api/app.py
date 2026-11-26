@@ -36,6 +36,7 @@ DB_PATH = Path(os.getenv("FEEDCRAFT_DB", "data/demo.db"))
 REPORT = Path("apps/web/public/demo/evaluation.json")
 app.state.rate_window = deque()
 app.state.rate_lock = Lock()
+app.state.write_lock = Lock()
 SESSION_LIFETIME = 86_400
 MAX_REQUESTS_PER_MINUTE = 1800
 MAX_BODY = 16_384
@@ -210,7 +211,7 @@ def profiles():
 def open_session(profile: Profile):
     token = secrets.token_urlsafe(32)
     now = time.time()
-    with database() as connection:
+    with app.state.write_lock, database() as connection:
         connection.execute("DELETE FROM sessions WHERE created <= ?", (now - SESSION_LIFETIME,))
         connection.execute("INSERT INTO sessions VALUES (?, ?, ?)", (digest(token), profile.profile_id, now))
     return {"token": token, "expires_in": SESSION_LIFETIME}
@@ -218,7 +219,7 @@ def open_session(profile: Profile):
 
 @app.post("/api/demo/reset")
 def reset(key: str = Depends(session)):
-    with database() as connection:
+    with app.state.write_lock, database() as connection:
         connection.execute("DELETE FROM events WHERE session = ?", (key,))
         connection.execute("DELETE FROM requests WHERE session = ?", (key,))
     return {"reset": True}
@@ -226,7 +227,7 @@ def reset(key: str = Depends(session)):
 
 @app.post("/api/interactions")
 def collect(event: Event, key: str = Depends(session)):
-    with database() as connection:
+    with app.state.write_lock, database() as connection:
         connection.execute("BEGIN IMMEDIATE")
         old = connection.execute(
             "SELECT item_id, event_type FROM events WHERE session = ? AND event_id = ?", (key, event.event_id)
@@ -247,7 +248,7 @@ def collect(event: Event, key: str = Depends(session)):
 def recommend(payload: Recommendation, key: str = Depends(session)):
     started = time.perf_counter()
     request_id = secrets.token_urlsafe(16)
-    with database() as connection:
+    with app.state.write_lock, database() as connection:
         connection.execute("BEGIN IMMEDIATE")
         events = history(connection, key)
         result = rank(events, payload.ranking_policy.model_dump(), payload.n, payload.model_version)

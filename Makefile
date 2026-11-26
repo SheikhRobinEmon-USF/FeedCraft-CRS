@@ -2,6 +2,7 @@ PYTHON := .venv/bin/python
 WEB := apps/web
 export OPENBLAS_NUM_THREADS := 1
 export NEXT_TELEMETRY_DISABLED := 1
+export npm_config_cache ?= $(CURDIR)/.cache/npm
 
 .PHONY: setup data-small train evaluate api web test screenshots demo-export demo benchmark
 

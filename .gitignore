@@ -234,3 +234,6 @@ playwright-report/
 test-results/
 *.tsbuildinfo
 *.db
+
+.cache/
+apps/web/next-env.d.ts

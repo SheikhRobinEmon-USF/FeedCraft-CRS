@@ -1,8 +1,8 @@
 # Project 02 — FeedCraft: Explainable Short-Video & Streaming Recommendation Lab
 
-**Working name, not trademark cleared.** **PRD version:** 1.0. **Status:** build specification / not implemented.  
-**One-line pitch:** A recommendation system visitors can **use and inspect**: as they watch, skip, like and change preferences, an actual ranking engine adapts and reveals what drove each recommendation and what trade-offs it made.  
-**Target roles:** ML engineer, recommender systems engineer, AI product manager, full-stack engineer, UX/product designer.  
+**Working name, not trademark cleared.** **PRD version:** 1.0. **Status:** build specification / not implemented.<br>
+**One-line pitch:** A recommendation system visitors can **use and inspect**: as they watch, skip, like and change preferences, an actual ranking engine adapts and reveals what drove each recommendation and what trade-offs it made.<br>
+**Target roles:** ML engineer, recommender systems engineer, AI product manager, full-stack engineer, UX/product designer.<br>
 **Primary user:** viewer looking for relevant and diverse content. **Secondary user:** recommender engineer/product manager evaluating engagement vs novelty, coverage and quality.
 
 ## A. Competitive reality and differentiator
@@ -183,10 +183,10 @@ tests/{unit,integration,model_validation,e2e}
 
 ## I. Tests / performance / privacy
 
-**Unit:** itemKNN similarity, ALS fallback, seen-filtering, item availability, score re-ranking, diversity, deterministic ties, cold-start profiles, cutoff leaks, negative sampling protocol.  
-**API:** unauthorized profile denial, bounded parameters, idempotent events, pagination, no model artifact injection, missing/unavailable model fallback.  
-**E2E:** open cold-start → choose genres → watch/skip → refresh → explain → explore policy slider → reset; mobile swipe and keyboard.  
-**Security/privacy:** no collection from actual external streaming accounts; demo profiles fictional; consent for optional analytics; no scraping, no unknown third-party beacons; user controls history reset; license attribution.  
+**Unit:** itemKNN similarity, ALS fallback, seen-filtering, item availability, score re-ranking, diversity, deterministic ties, cold-start profiles, cutoff leaks, negative sampling protocol.<br>
+**API:** unauthorized profile denial, bounded parameters, idempotent events, pagination, no model artifact injection, missing/unavailable model fallback.<br>
+**E2E:** open cold-start → choose genres → watch/skip → refresh → explain → explore policy slider → reset; mobile swipe and keyboard.<br>
+**Security/privacy:** no collection from actual external streaming accounts; demo profiles fictional; consent for optional analytics; no scraping, no unknown third-party beacons; user controls history reset; license attribution.<br>
 **Performance targets (proposed):** local cached recommendation API p95 <=250ms for 20 results / small model on baseline Mac, feed interaction <=100ms perceptual feedback, static demo load responsive; report real measured benchmarks incl model startup.
 
 ## J. Demo narrative

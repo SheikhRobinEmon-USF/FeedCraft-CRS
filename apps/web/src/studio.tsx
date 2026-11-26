@@ -53,7 +53,7 @@ function Player({ id, onEvent }: { id: string; onEvent: (kind: Kind) => void }) 
 
 function Inspector({ row, ranking, detailed = false }: { row?: Row; ranking: Ranking; detailed?: boolean }) {
   return <aside className={detailed ? "panel inspector full-inspector" : "panel inspector"} aria-label="Rank inspector">
-    <div className="panel-title"><span aria-hidden="true">≋</span><h2>Rank Inspector</h2>{!detailed && <Link href="/why/current/" className="icon-link" aria-label="Open full rank inspector">↗</Link>}</div>
+    <div className="panel-title"><span aria-hidden="true">≋</span><h2>Rank Inspector</h2>{!detailed && <Link href="/why/current/" className="icon-link" aria-label="Open full rank inspector">Details</Link>}</div>
     <div className="inspector-body">
       {row ? <>
         <p className="eyebrow">WHY THIS CLIP</p>
@@ -219,7 +219,7 @@ export default function Studio({ view, item }: { view: View; item?: string }) {
   return <div className="studio">
     <a className="skip-link" href="#content">Skip to content</a>
     <nav className="sidebar" aria-label="Main">
-      <Link className="brand" href="/"><span className="brand-mark" aria-hidden="true">▶</span><span>Feed<span>Craft</span><small>RECOMMENDATION LAB</small></span></Link>
+      <Link className="brand" href="/"><span className="brand-mark" aria-hidden="true" /><span>Feed<span>Craft</span><small>RECOMMENDATION LAB</small></span></Link>
       <div className="navigation">
         <p>WATCH</p>
         {nav.slice(0, 3).map(([key, href, label]) => <Link key={key} aria-current={view === key ? "page" : undefined} href={href}>
@@ -247,7 +247,7 @@ export default function Studio({ view, item }: { view: View; item?: string }) {
           </div>
           {view === "home" && <section className="persona-strip" aria-label="Launch demo profile">
             {personas.map((entry) => <button type="button" key={entry.id} onClick={() => choose(entry.id, true)} disabled={!ready || busy}>
-              <span aria-hidden="true">{entry.id === "cold" ? "◔" : entry.id === "focused" ? "◎" : "✧"}</span>
+              <span aria-hidden="true">{entry.id === "cold" ? "○" : entry.id === "focused" ? "◎" : "✧"}</span>
               <span><strong>{entry.label}</strong><small>{entry.description}</small></span>
             </button>)}
           </section>}
@@ -259,7 +259,7 @@ export default function Studio({ view, item }: { view: View; item?: string }) {
                     <Cover itemId={hero.id} priority />
                     <div className="hero-shade" />
                     <span className="clip-label">SIMULATED CLIP</span>
-                    <button className="play" type="button" aria-label={`Play ${hero.title}`} onClick={() => setPlaying(hero.id)}>▶</button>
+                    <button className="play" type="button" aria-label={`Play ${hero.title}`} onClick={() => setPlaying(hero.id)} />
                     <div className="hero-copy"><div>{hero.genres.join(" / ")} <span>•</span> {hero.seconds}s</div>
                       <h2>{hero.title}</h2><p>{hero.description}</p>
                     </div>

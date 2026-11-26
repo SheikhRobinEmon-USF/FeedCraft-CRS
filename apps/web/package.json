@@ -5,7 +5,7 @@
     "test": "vitest run",
     "dev": "next dev",
     "build": "next build",
-    "check": "tsc --noEmit && eslint .",
+    "check": "next typegen && tsc --noEmit && eslint .",
     "e2e": "playwright test"
   },
   "license": "MIT",

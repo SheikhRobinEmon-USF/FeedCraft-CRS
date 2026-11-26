@@ -69,4 +69,4 @@ jobs:
       - run: npm --prefix apps/web audit --audit-level=high
       - run: pip-audit -r requirements.txt
       - name: Scan Git history for secrets
-        run: docker run --rm -v "$PWD:/repo:ro" ghcr.io/gitleaks/gitleaks:v8.24.3 git --redact /repo
+        run: docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/repo:ro" ghcr.io/gitleaks/gitleaks:v8.24.3 git --redact /repo

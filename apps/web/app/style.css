@@ -71,7 +71,7 @@ select{border:1px solid var(--line);border-radius:6px;padding:7px 10px;backgroun
 .panel-title{display:flex;align-items:center;gap:9px;border-bottom:1px solid var(--line);padding:13px 15px}
 .panel-title>span{color:var(--accent);font-size:21px;line-height:1}
 .panel-title h2,.activity h2{font-size:16px;font-weight:800}
-.icon-link{margin-left:auto;padding:0 4px;color:var(--muted)}
+.icon-link{margin-left:auto;padding:0 4px;color:var(--muted);font-size:12px}.icon-link:hover{text-decoration:underline}
 .inspector-body{padding:15px}
 .reason-title,.score-head,.trace-footer,.bar-row>div:first-child,.queue-head,.policy>div{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .reason-title{margin:8px 0}
@@ -129,3 +129,5 @@ thead{background:#252420}tbody th{font-weight:500;color:#ded7cb}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
 
 .genre-details{margin-bottom:14px}.genre-details summary{cursor:pointer;font-weight:750;padding:7px 0}
+
+.brand-mark::before,.play::before{content:"";display:block;width:0;height:0;border-top:.39em solid transparent;border-bottom:.39em solid transparent;border-left:.64em solid currentColor;margin-left:.12em}

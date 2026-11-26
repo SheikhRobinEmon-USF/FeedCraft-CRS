@@ -55,7 +55,7 @@ test("the optional API ranks the viewer's synchronized demo events", async ({ pa
   await page.goto("/profile/");
   await page.getByLabel(/Use local API/).check();
   await page.getByRole("link", { name: "For You", exact: true }).click();
-  await page.getByRole("button", { name: "Like" }).click();
+  await page.getByRole("button", { name: "♡ Like", exact: true }).click();
   await page.getByRole("button", { name: "Save" }).click();
   await page.getByRole("button", { name: /Refresh for You/ }).click();
   await expect(page.getByText("synthetic-als-v1", { exact: true })).toBeVisible();

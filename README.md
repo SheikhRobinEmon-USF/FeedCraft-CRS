@@ -36,4 +36,4 @@ For browser tests, install Chromium with `cd apps/web && npx playwright install 
 
 ## Publish the static demo
 
-Set the repository’s Pages source to **GitHub Actions**. The deployment workflow builds the static export at the configured project path. The optional local API and the raw MovieLens dataset stay local.
+Set the repository’s Pages source to **GitHub Actions**. Then run **Deploy browser demo** from the Actions tab. The deployment workflow builds the static export at the configured project path. The optional local API and the raw MovieLens dataset stay local.
