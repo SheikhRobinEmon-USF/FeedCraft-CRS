@@ -34,6 +34,25 @@ def synthetic_item_factors():
     return items
 
 
+def effective_signals(events):
+    reactions, saves = set(), set()
+    signals = []
+    for event in reversed(events):
+        item_id, kind = event["item_id"], event["event_type"]
+        if kind in {"like", "dislike"}:
+            if item_id in reactions:
+                continue
+            reactions.add(item_id)
+        elif kind in {"save", "unsave"}:
+            if item_id in saves:
+                continue
+            saves.add(item_id)
+            if kind == "unsave":
+                continue
+        signals.append(event)
+    return signals[::-1]
+
+
 def profile_scores(events, model):
     if model != "als":
         return {}, "catalog-rules-v1"
@@ -50,11 +69,12 @@ def profile_scores(events, model):
 
 
 def rank(events, policy, n=6, model="rules"):
-    retrieval, version = profile_scores(events, model)
-    seen = {event["item_id"] for event in events if event["event_type"] in {"finish", "skip", "dislike"}}
+    signals = effective_signals(events)
+    retrieval, version = profile_scores(signals, model)
+    seen = {event["item_id"] for event in signals if event["event_type"] in {"finish", "skip", "dislike"}}
     affinity = {}
     evidence = {}
-    for event in events:
+    for event in signals:
         item = ITEMS[event["item_id"]]
         for genre in item["genres"]:
             affinity[genre] = affinity.get(genre, 0) + WEIGHTS[event["event_type"]]
@@ -111,7 +131,7 @@ def rank(events, policy, n=6, model="rules"):
         for tag in ITEMS[winner["item_id"]]["genres"]:
             used[tag] = used.get(tag, 0) + 1
     return {"items": ranked, "model_version": version, "candidate_ids": available,
-            "cold_start": not interest and not events, "removals": removals}
+            "cold_start": not interest and not signals, "removals": removals}
 
 
 def simulate(policy, n=4, model="rules"):

@@ -7,7 +7,8 @@ export const genres = [...new Set(catalog.flatMap((item) => item.genres))].sort(
 export const items = Object.fromEntries(catalog.map((item) => [item.id, item]));
 export const weights = { play: 0.15, finish: 1, like: 1.2, dislike: -1.2, skip: -0.65, save: 0.8, unsave: -0.8 };
 export type Kind = keyof typeof weights;
-export type Event = { event_id: string; item_id: string; event_type: Kind };
+type Signal = { item_id: string; event_type: Kind };
+export type Event = Signal & { event_id: string };
 export type Policy = {
   exploration: number; diversity_lambda: number; interests: string[]; hidden: string[];
   intensity: number; exclude_seen: boolean; candidate_ids: string[] | null;
@@ -26,11 +27,28 @@ export function asset(id: string, ext: string) {
   return `${base}/demo/${id}.${ext}`;
 }
 
-export function rank(events: Pick<Event, "item_id" | "event_type">[], policy: Policy, n = 6): Ranking {
-  const seen = new Set(events.filter((event) => ["finish", "skip", "dislike"].includes(event.event_type)).map((event) => event.item_id));
+function effectiveSignals(events: Signal[]) {
+  const reactions = new Set<string>();
+  const saves = new Set<string>();
+  return events.toReversed().filter(({ item_id, event_type }) => {
+    if (event_type === "like" || event_type === "dislike") {
+      if (reactions.has(item_id)) return false;
+      reactions.add(item_id);
+    } else if (event_type === "save" || event_type === "unsave") {
+      if (saves.has(item_id)) return false;
+      saves.add(item_id);
+      return event_type === "save";
+    }
+    return true;
+  }).reverse();
+}
+
+export function rank(events: Signal[], policy: Policy, n = 6): Ranking {
+  const signals = effectiveSignals(events);
+  const seen = new Set(signals.filter((event) => ["finish", "skip", "dislike"].includes(event.event_type)).map((event) => event.item_id));
   const affinity = new Map<string, number>();
   const evidence = new Map<string, Set<string>>();
-  for (const event of events) {
+  for (const event of signals) {
     const item = items[event.item_id];
     for (const tag of item.genres) {
       affinity.set(tag, (affinity.get(tag) ?? 0) + weights[event.event_type]);
@@ -78,5 +96,5 @@ export function rank(events: Pick<Event, "item_id" | "event_type">[], policy: Po
     for (const tag of items[winner.item_id].genres) used.set(tag, (used.get(tag) ?? 0) + 1);
   }
   return { items: result, model_version: "catalog-rules-v1", candidate_ids, removals,
-    cold_start: !events.length && !policy.interests.length, request_id: "local-current" };
+    cold_start: !signals.length && !policy.interests.length, request_id: "local-current" };
 }

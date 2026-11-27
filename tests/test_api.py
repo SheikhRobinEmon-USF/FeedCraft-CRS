@@ -86,6 +86,19 @@ def test_trace_contributions_and_filters():
         assert row["score"] == pytest.approx(sum(row["trace"].values()))
 
 
+@pytest.mark.parametrize("model", ["rules", "als"])
+def test_replayed_history_uses_current_vote_and_bookmark(model):
+    like = {"item_id": "blue-hour", "event_type": "like"}
+    dislike = {**like, "event_type": "dislike"}
+    save = {**like, "event_type": "save"}
+    unsave = {**like, "event_type": "unsave"}
+    policy = server.Policy(exclude_seen=True).model_dump()
+    assert rank([like, like], policy, model=model) == rank([like], policy, model=model)
+    assert rank([dislike, like], policy, model=model) == rank([like], policy, model=model)
+    assert rank([like, dislike], policy, model=model) == rank([dislike], policy, model=model)
+    assert rank([save, save, unsave], policy, model=model) == rank([], policy, model=model)
+
+
 def test_committed_contracts_match_backend():
     for name, model in (("interaction", server.Event), ("recommendations", server.Recommendation)):
         path = Path(f"packages/contracts/{name}.schema.json")

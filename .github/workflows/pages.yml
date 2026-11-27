@@ -15,6 +15,7 @@ concurrency:
 
 jobs:
   build:
+    if: github.event_name == 'workflow_dispatch' || github.event.repository.has_pages == true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5

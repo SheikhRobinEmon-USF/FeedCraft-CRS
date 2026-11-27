@@ -53,7 +53,7 @@ export function ScreeningRoom({ heroId, ranking, comparison, playing, watch, sav
   const hero = heroId ? items[heroId] : undefined;
   const index = ranking.items.findIndex((row) => row.item_id === heroId);
   const first = index <= 0;
-  const last = index < 0 || index >= ranking.items.length - 1;
+  const last = index >= ranking.items.length - 1;
 
   useEffect(() => {
     const list = queue.current;

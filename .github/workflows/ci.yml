@@ -51,7 +51,7 @@ jobs:
           trap 'kill "$api"' EXIT
           curl --fail --silent --retry 10 --retry-connrefused http://127.0.0.1:8000/health
           FEEDCRAFT_TEST_API=1 FEEDCRAFT_SCREENSHOTS=1 npm --prefix apps/web run e2e
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: browser-results
@@ -62,7 +62,7 @@ jobs:
           npm --prefix apps/web sbom --sbom-format cyclonedx > web-sbom.json
           python -m pip install cyclonedx-bom pip-audit
           cyclonedx-py requirements requirements.txt -o python-sbom.json
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: sboms
           path: '*-sbom.json'

@@ -28,6 +28,18 @@ describe("browser ranking", () => {
     expect(result.removals).toHaveLength(catalog.length - 2);
   });
 
+  it("uses the latest vote and bookmark state when replaying existing histories", () => {
+    const like = { item_id: "blue-hour", event_type: "like" as const };
+    const dislike = { ...like, event_type: "dislike" as const };
+    const save = { ...like, event_type: "save" as const };
+    const unsave = { ...like, event_type: "unsave" as const };
+    const policy = { ...defaults, exclude_seen: true };
+    expect(rank([like, like], policy)).toEqual(rank([like], policy));
+    expect(rank([dislike, like], policy)).toEqual(rank([like], policy));
+    expect(rank([like, dislike], policy)).toEqual(rank([dislike], policy));
+    expect(rank([save, save, unsave], policy)).toEqual(rank([], policy));
+  });
+
   it("promotes target genres across the expanded pool while excluding liked clips from the comparison", () => {
     const checks = runCatalogChecks();
     expect(checks.filter((check) => check.label.endsWith("preference")).every((check) => check.candidateCount === catalog.length)).toBe(true);

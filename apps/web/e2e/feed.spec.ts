@@ -61,18 +61,73 @@ test("discovery passes automated accessibility checks and fits the viewport", as
   if (process.env.FEEDCRAFT_SCREENSHOTS) await page.screenshot({ path: testInfo.outputPath("discovery.png"), fullPage: true });
 });
 
-test("the optional API ranks the viewer's synchronized demo events", async ({ page }) => {
+test("the optional API retries only unaccepted events and preserves progress across reloads", async ({ page }) => {
   test.skip(!process.env.FEEDCRAFT_TEST_API, "Local API integration fixture is disabled");
+  const uploads: string[] = [];
+  await page.route("**/api/interactions", async (route) => {
+    if (route.request().method() !== "POST") {
+      await route.continue();
+      return;
+    }
+    uploads.push(route.request().postDataJSON().event_type);
+    if (uploads.length === 2) {
+      await route.fulfill({ status: 503, headers: { "Access-Control-Allow-Origin": "*" } });
+    } else {
+      await route.continue();
+    }
+  });
   await page.goto("/profile/");
   await page.getByLabel(/Use local API/).check();
   await navigate(page, "For You");
   await page.getByRole("button", { name: "♡ Like", exact: true }).click();
   await page.getByRole("button", { name: "Save" }).click();
-  await page.getByRole("button", { name: /Refresh for You/ }).click();
+  const refresh = page.getByRole("button", { name: /Refresh for You/ });
+  await refresh.click();
+  await expect(page.getByRole("status").filter({ hasText: /local API is unavailable/ })).toBeVisible();
+  await refresh.click();
   await expect(page.getByText("synthetic-als-v1", { exact: true })).toBeVisible();
+  expect(uploads).toEqual(["like", "save", "save"]);
+
+  await page.reload();
+  await expect(refresh).toBeEnabled();
+  const refreshed = page.waitForResponse((response) => response.request().method() === "POST" && response.url().endsWith("/api/recommendations"));
+  await refresh.click();
+  expect((await refreshed).ok()).toBe(true);
+  expect(uploads).toEqual(["like", "save", "save"]);
   await navigate(page, "Preferences");
   await page.getByRole("button", { name: "Reset demo" }).click();
   await expect(page.getByText("No activity yet.")).toBeVisible();
+});
+
+test("leaving the feed cancels an in-flight API refresh", async ({ page }) => {
+  test.skip(!process.env.FEEDCRAFT_TEST_API, "Local API integration fixture is disabled");
+  let release!: () => void;
+  const pending = new Promise<void>((resolve) => { release = resolve; });
+  await page.route("**/api/recommendations", async (route) => {
+    if (route.request().method() !== "POST") {
+      await route.continue();
+      return;
+    }
+    await pending;
+    await route.abort().catch(() => { /* request was already cancelled */ });
+  });
+
+  try {
+    await page.goto("/profile/");
+    await page.getByLabel(/Use local API/).check();
+    await navigate(page, "For You");
+    const started = page.waitForRequest((request) => request.method() === "POST" && request.url().endsWith("/api/recommendations"));
+    await page.getByRole("button", { name: /Refresh for You/ }).click();
+    const request = await started;
+    const [cancelled] = await Promise.all([
+      page.waitForEvent("requestfailed", { predicate: (failed) => failed === request, timeout: 3500 }),
+      navigate(page, "Preferences"),
+    ]);
+    expect(cancelled).toBe(request);
+    await expect(page.getByText("No activity yet.")).toBeVisible();
+  } finally {
+    release();
+  }
 });
 
 test("carousel supports keyboard navigation and touch swipes", async ({ page }, testInfo) => {
@@ -118,6 +173,8 @@ test("genre guide filters the catalog and opens a playable clip", async ({ page 
   await clip.click();
   await page.getByRole("button", { name: "Play Oasis Road" }).click();
   await expect.poll(() => page.locator("video").evaluate((video: HTMLVideoElement) => video.readyState)).toBeGreaterThan(1);
+  await page.getByRole("button", { name: "Next clip" }).click();
+  await expect(page).toHaveURL(/\/watch\/blue-hour\/$/);
 });
 
 test("fresh test link restores the cold-start order and still accepts feedback", async ({ page }) => {

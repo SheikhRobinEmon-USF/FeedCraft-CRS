@@ -14,7 +14,7 @@ import type { LabView } from "./laboratory";
 const Laboratory = dynamic(() => import("./laboratory").then((module) => module.Laboratory));
 
 type View = "home" | "feed" | "catalog" | "watch" | "profile" | "why" | LabView;
-type State = { persona: string; policy: Policy; events: Event[]; snapshot: Event[]; ranking?: Ranking; token?: string; live: boolean; catalogSize?: number };
+type State = { persona: string; policy: Policy; events: Event[]; snapshot: Event[]; ranking?: Ranking; token?: string; syncedEvents?: number; live: boolean; catalogSize?: number };
 const initial: State = { persona: "cold", policy: defaults, events: [], snapshot: [], live: false, catalogSize: catalog.length };
 const queueSize = 12;
 const storageKey = "feedcraft-v1";
@@ -53,10 +53,10 @@ function Navigation({ view, persona, live }: { view: View; persona: string; live
   </header>;
 }
 
-async function api<T>(path: string, body: unknown, token?: string): Promise<T> {
+async function api<T>(path: string, body: unknown, signal: AbortSignal, token?: string): Promise<T> {
   const response = await fetch(`${apiRoot}/api/${path}`, {
     method: "POST", headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-    body: JSON.stringify(body), signal: AbortSignal.timeout(5000),
+    body: JSON.stringify(body), signal: AbortSignal.any([signal, AbortSignal.timeout(5000)]),
   });
   if (!response.ok) throw new Error(String(response.status));
   return response.json() as Promise<T>;
@@ -97,6 +97,7 @@ export default function Studio({ view, item, freshStart = false }: { view: View;
   const router = useRouter();
   const [state, setState] = useState(initial);
   const stateRef = useRef(initial);
+  const lifetime = useRef<AbortController | null>(null);
   const [ready, setReady] = useState(false);
   const [selected, setSelected] = useState("");
   const [playing, setPlaying] = useState("");
@@ -109,6 +110,12 @@ export default function Studio({ view, item, freshStart = false }: { view: View;
     setState(next);
     try { sessionStorage.setItem(storageKey, JSON.stringify(next)); } catch { /* render from memory */ }
   }
+
+  useEffect(() => {
+    const controller = new AbortController();
+    lifetime.current = controller;
+    return () => controller.abort();
+  }, []);
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
@@ -175,17 +182,21 @@ export default function Studio({ view, item, freshStart = false }: { view: View;
   async function choose(id: string, launch = false) {
     const entry = personas.find((option) => option.id === id) ?? personas[0];
     const existing = stateRef.current;
-    if (existing.token) {
+    const signal = lifetime.current?.signal;
+    if (!signal || signal.aborted) return;
+    if (apiRoot && existing.token) {
       setBusy(true);
-      try { await api("demo/reset", {}, existing.token); }
+      try { await api("demo/reset", {}, signal, existing.token); }
       catch (error) {
+        if (signal.aborted) return;
         if (!(error instanceof Error) || error.message !== "401") {
           setStatus("Could not clear the previous API session. Retry while the API is online.");
           return;
         }
       }
-      finally { setBusy(false); }
+      finally { if (!signal.aborted) setBusy(false); }
     }
+    if (signal.aborted) return;
     commit({ ...initial, live: existing.live, persona: entry.id,
       policy: { ...defaults, interests: entry.interests, exploration: entry.exploration } });
     select("");
@@ -201,6 +212,11 @@ export default function Studio({ view, item, freshStart = false }: { view: View;
       return;
     }
     if (kind === "play" && current.events.some((event) => event.item_id === id && event.event_type === kind)) return;
+    if (kind === "like" || kind === "dislike") {
+      const lastVote = current.events.findLast((event) => event.item_id === id &&
+        (event.event_type === "like" || event.event_type === "dislike"));
+      if (lastVote?.event_type === kind) return;
+    }
     const random = new Uint32Array(4);
     crypto.getRandomValues(random);
     const event = { item_id: id, event_type: kind, event_id: [...random].map((value) => value.toString(16).padStart(8, "0")).join("") };
@@ -211,37 +227,51 @@ export default function Studio({ view, item, freshStart = false }: { view: View;
   }
 
   async function refresh() {
+    const signal = lifetime.current?.signal;
+    if (!signal || signal.aborted) return;
     const before = stateRef.current;
+    let token = before.token;
+    let syncedEvents = token ? before.syncedEvents ?? 0 : 0;
     setBusy(true);
     try {
       let next: Ranking;
-      let token = before.token;
       if (apiRoot && before.live) {
         if (!token) {
-          ({ token } = await api<{ token: string }>("demo/session", { profile_id: before.persona }));
-          commit({ ...stateRef.current, token });
+          ({ token } = await api<{ token: string }>("demo/session", { profile_id: before.persona }, signal));
+          signal.throwIfAborted();
+          commit({ ...stateRef.current, token, syncedEvents });
         }
-        for (const event of before.events) await api("interactions", event, token);
-        next = await api<Ranking>("recommendations", { ranking_policy: before.policy, model_version: "als", n: queueSize }, token);
+        for (const event of before.events.slice(syncedEvents)) {
+          await api("interactions", event, signal, token);
+          syncedEvents++;
+        }
+        next = await api<Ranking>("recommendations", { ranking_policy: before.policy, model_version: "als", n: queueSize }, signal, token);
       } else {
         next = rank(before.events, before.policy, queueSize);
       }
+      signal.throwIfAborted();
       const latest = stateRef.current;
       const updated = latest.policy === before.policy ? next : undefined;
-      commit({ ...latest, snapshot: before.events, ranking: updated, token });
-      select((updated ?? rank(before.events, latest.policy, queueSize)).items[0]?.item_id ?? "");
+      const displayed = updated ?? rank(before.events, latest.policy, queueSize);
+      commit({ ...latest, snapshot: before.events, ranking: updated, token, syncedEvents });
+      select(displayed.items[0]?.item_id ?? "");
       const previous = before.ranking ?? rank(before.snapshot, before.policy, queueSize);
       setComparison(previous.items.map((row) => row.item_id));
-      const moved = next.items.filter((row, index) => row.item_id !== previous.items[index]?.item_id).length;
-      setStatus(`Feed refreshed · ${next.items.length} ranked clips · ${moved ? `${moved} positions changed` : "same order"}`);
+      const moved = displayed.items.filter((row, index) => row.item_id !== previous.items[index]?.item_id).length;
+      setStatus(`Feed refreshed · ${displayed.items.length} ranked clips · ${moved ? `${moved} positions changed` : "same order"}`);
     } catch (error) {
+      if (signal.aborted) return;
       if (error instanceof Error && error.message === "401") {
-        commit({ ...stateRef.current, token: undefined });
+        commit({ ...stateRef.current, token: undefined, syncedEvents: 0 });
         setStatus("The API session expired. Refresh again to open a new session.");
       } else {
+        // Keep the accepted prefix so a partial upload can resume on retry.
+        if (token && syncedEvents !== stateRef.current.syncedEvents) commit({ ...stateRef.current, syncedEvents });
         setStatus("The local API is unavailable. You can retry or switch to browser ranking in Preferences.");
       }
-    } finally { setBusy(false); }
+    } finally {
+      if (!signal.aborted) setBusy(false);
+    }
   }
 
   function skip(id: string) {
