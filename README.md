@@ -1,6 +1,6 @@
 # FeedCraft
 
-FeedCraft is a recommendation lab for short clips. Pick a fictional profile, swipe or use arrow keys in the screening room, and react to clips. Refresh to watch the playlist reorder, or freeze the candidate pool and change the exploration slider to compare ranks. The Control Room compares three MovieLens baselines and replays a fictional session against two ranking policies.
+FeedCraft is a recommendation lab for short clips. Pick a fictional profile, swipe or use arrow keys in the screening room, and react to clips. Refresh to watch the playlist reorder, or freeze the candidate pool and change the exploration slider to compare ranks. The searchable Catalog exposes all clips. The Control Room compares three MovieLens baselines, replays a fictional session against two ranking policies, and shows controlled top-10 checks for the demo catalog.
 
 ## Run the browser demo
 
@@ -10,7 +10,7 @@ With Node.js 24, npm, Python 3, and Make installed, run:
 make demo
 ```
 
-Open [localhost:3000](http://127.0.0.1:3000). Installation downloads locked npm dependencies. After the build, the app needs only its static files. The repository includes the recorded aggregate evaluation, six silent simulated clips with caption tracks, and a browser-local ranker. Preferences and feedback live in the current tab session.
+Open [localhost:3000](http://127.0.0.1:3000). Installation downloads locked npm dependencies. After the build, the app needs only its static files. The repository includes the recorded aggregate evaluation, 30 silent simulated clips with caption tracks, and a browser-local ranker. Preferences and feedback live in the current tab session.
 
 ## Run the optional API and research pipeline
 

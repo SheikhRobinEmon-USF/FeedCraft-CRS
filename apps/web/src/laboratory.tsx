@@ -8,6 +8,7 @@ import { AriaComponent, GridComponent, TooltipComponent } from "echarts/componen
 import { init, use as registerCharts } from "echarts/core";
 import { SVGRenderer } from "echarts/renderers";
 import { asset, items, rank, seedEvents, type Policy, type Ranking } from "./rank";
+import { runCatalogChecks } from "./catalog-checks";
 import { modelTitles, type Model, type Report } from "./model-summary";
 
 registerCharts([BarChart, AriaComponent, GridComponent, TooltipComponent, SVGRenderer]);
@@ -139,6 +140,25 @@ function summarize(result: Ranking, preferred: Set<string>) {
   };
 }
 
+function CatalogChecks() {
+  const checks = runCatalogChecks();
+  return <section className="panel settings">
+    <h2>Catalog responsiveness</h2>
+    <p>Each scenario compares two top-10 lists from the same candidate pool. The feedback session likes two food clips, then excludes those clips from both lists.</p>
+    <div className="table-wrap"><table>
+      <caption>Deterministic checks on simulated clips. Counts measure ranking response to a known input.</caption>
+      <thead><tr><th scope="col">Scenario</th><th scope="col">Eligible clips</th><th scope="col">Genre</th>
+        <th scope="col">Before</th><th scope="col">After</th><th scope="col">Clips replaced</th></tr></thead>
+      <tbody>{checks.map((check) => <tr key={check.label}>
+        <th scope="row">{check.label}</th><td>{check.candidateCount}</td><td>{check.genre}</td>
+        <td>{check.baselineMatches}/{check.topK}</td><td>{check.personalizedMatches}/{check.topK}</td>
+        <td>{check.topK - check.sharedClips}</td>
+      </tr>)}</tbody>
+    </table></div>
+    <p className="micro">Use MovieLens Evaluation to compare measured performance on historical ratings. This catalog check uses fictional clips and simulated feedback.</p>
+  </section>;
+}
+
 function Simulator({ policy }: { policy: Policy }) {
   const [step, setStep] = useState(seedEvents.length);
   const [running, setRunning] = useState(false);
@@ -176,6 +196,7 @@ function Simulator({ policy }: { policy: Policy }) {
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
   return <div className="lab-grid">
+    <CatalogChecks />
     <section className="panel settings">
       <p className="eyebrow accent">SYNTHETIC REPLAY</p>
       <div className="lab-panel-head"><h2>Session events</h2>

@@ -1,25 +1,28 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { Activity, ArrowUpRight, BarChart3, Compass, Film, FlaskConical, Menu, Play, Radar, RefreshCw, SlidersHorizontal, Sparkles, Workflow, X } from "lucide-react";
+import { Activity, ArrowUpRight, LibraryBig, BarChart3, Compass, Film, FlaskConical, Menu, Play, Radar, RefreshCw, SlidersHorizontal, Sparkles, Workflow, X } from "lucide-react";
 import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { defaults, genres, items, personas, rank, type Event, type Kind, type Policy, type Ranking, type Row } from "./rank";
+import { catalog, defaults, genres, items, personas, rank, type Event, type Kind, type Policy, type Ranking, type Row } from "./rank";
+import { ClipCatalog } from "./clip-catalog";
 import { PolicyControls, ScreeningRoom } from "./screening-room";
 import type { LabView } from "./laboratory";
 
 const Laboratory = dynamic(() => import("./laboratory").then((module) => module.Laboratory));
 
-type View = "home" | "feed" | "watch" | "profile" | "why" | LabView;
-type State = { persona: string; policy: Policy; events: Event[]; snapshot: Event[]; ranking?: Ranking; token?: string; live: boolean };
-const initial: State = { persona: "cold", policy: defaults, events: [], snapshot: [], live: false };
+type View = "home" | "feed" | "catalog" | "watch" | "profile" | "why" | LabView;
+type State = { persona: string; policy: Policy; events: Event[]; snapshot: Event[]; ranking?: Ranking; token?: string; live: boolean; catalogSize?: number };
+const initial: State = { persona: "cold", policy: defaults, events: [], snapshot: [], live: false, catalogSize: catalog.length };
+const queueSize = 12;
 const storageKey = "feedcraft-v1";
 const apiRoot = process.env.NEXT_PUBLIC_FEEDCRAFT_API || "";
 const nav = [
   { view: "home", href: "/", label: "Discover", icon: Compass },
   { view: "feed", href: "/feed/", label: "For You", icon: Film },
+  { view: "catalog", href: "/catalog/", label: "Catalog", icon: LibraryBig },
   { view: "profile", href: "/profile/", label: "Preferences", icon: SlidersHorizontal },
   { view: "why", href: "/why/current/", label: "Rank Inspector", icon: Radar },
   { view: "models", href: "/lab/models/", label: "Models", icon: FlaskConical },
@@ -112,7 +115,14 @@ export default function Studio({ view, item }: { view: View; item?: string }) {
       try {
         const serialized = sessionStorage.getItem(storageKey);
         if (serialized) {
-          const next = JSON.parse(serialized) as State;
+          const saved = JSON.parse(serialized) as State;
+          const next = saved.catalogSize === catalog.length ? saved : {
+            ...saved,
+            policy: { ...saved.policy, candidate_ids: null },
+            ranking: undefined,
+            catalogSize: catalog.length,
+          };
+          if (next !== saved) sessionStorage.setItem(storageKey, JSON.stringify(next));
           stateRef.current = next;
           setState(next);
         }
@@ -130,7 +140,7 @@ export default function Studio({ view, item }: { view: View; item?: string }) {
   }, [status]);
 
   const policy = state.policy;
-  const ranking = state.ranking ?? rank(state.snapshot, policy);
+  const ranking = state.ranking ?? rank(state.snapshot, policy, queueSize);
   const currentRow = ranking.items.find((row) => row.item_id === selected) ?? ranking.items[0];
   const heroId = view === "watch" ? item : currentRow?.item_id;
   const hero = heroId ? items[heroId] : undefined;
@@ -200,15 +210,15 @@ export default function Studio({ view, item }: { view: View; item?: string }) {
           commit({ ...stateRef.current, token });
         }
         for (const event of before.events) await api("interactions", event, token);
-        next = await api<Ranking>("recommendations", { ranking_policy: before.policy, model_version: "als" }, token);
+        next = await api<Ranking>("recommendations", { ranking_policy: before.policy, model_version: "als", n: queueSize }, token);
       } else {
-        next = rank(before.events, before.policy);
+        next = rank(before.events, before.policy, queueSize);
       }
       const latest = stateRef.current;
       const updated = latest.policy === before.policy ? next : undefined;
       commit({ ...latest, snapshot: before.events, ranking: updated, token });
-      select((updated ?? rank(before.events, latest.policy)).items[0]?.item_id ?? "");
-      const previous = before.ranking ?? rank(before.snapshot, before.policy);
+      select((updated ?? rank(before.events, latest.policy, queueSize)).items[0]?.item_id ?? "");
+      const previous = before.ranking ?? rank(before.snapshot, before.policy, queueSize);
       setComparison(previous.items.map((row) => row.item_id));
       const moved = next.items.filter((row, index) => row.item_id !== previous.items[index]?.item_id).length;
       setStatus(`Feed refreshed · ${next.items.length} ranked clips · ${moved ? `${moved} positions changed` : "same order"}`);
@@ -296,6 +306,7 @@ export default function Studio({ view, item }: { view: View; item?: string }) {
             </section>
           </div>
         </>}
+        {view === "catalog" && <ClipCatalog />}
         {view === "profile" && <>
           <div className="intro"><div><p className="eyebrow accent">VIEWER SETTINGS</p><h1>Preferences</h1><p>Set your interests, choose what to hide, and review your session.</p></div>
             <button type="button" className="primary" disabled={busy || !ready} onClick={() => choose(state.persona)}>Reset demo</button></div>

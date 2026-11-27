@@ -94,3 +94,17 @@ test("carousel supports keyboard navigation and touch swipes", async ({ page }, 
   await page.getByRole("button", { name: "Previous clip" }).click();
   await expect(page.getByRole("button", { name: /The Blue Hour/, pressed: true })).toBeVisible();
 });
+
+test("expanded catalog can be filtered and plays a newly published clip", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("link", { name: "Browse all clips" }).click();
+  await expect(page.getByText("12 of 30 matching clips")).toBeVisible();
+  await page.getByRole("button", { name: "Show more clips" }).click();
+  await expect(page.getByText("24 of 30 matching clips")).toBeVisible();
+  await page.getByRole("combobox", { name: "Genre", exact: true }).selectOption("Food");
+  await page.getByRole("searchbox", { name: "Search clips" }).fill("open flame");
+  await expect(page.getByText("1 of 1 matching clip")).toBeVisible();
+  await page.getByRole("link", { name: /Open Flame/ }).click();
+  await page.getByRole("button", { name: "Play Open Flame" }).click();
+  await expect.poll(() => page.locator("video").evaluate((video: HTMLVideoElement) => video.readyState)).toBeGreaterThan(1);
+});

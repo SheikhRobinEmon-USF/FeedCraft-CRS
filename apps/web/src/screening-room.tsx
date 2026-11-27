@@ -47,11 +47,23 @@ type ScreeningProps = {
 
 export function ScreeningRoom({ heroId, ranking, comparison, playing, watch, saved, reaction, onPlay, onSelect, onMove, onEvent, onSkip }: ScreeningProps) {
   const reduced = useReducedMotion();
+  const queue = useRef<HTMLOListElement>(null);
   const gesture = useRef<{ x: number; y: number } | null>(null);
   const hero = heroId ? items[heroId] : undefined;
   const index = ranking.items.findIndex((row) => row.item_id === heroId);
   const first = index <= 0;
   const last = index < 0 || index >= ranking.items.length - 1;
+
+  useEffect(() => {
+    const list = queue.current;
+    const active = list?.querySelector("[aria-pressed=true], [aria-current=page]");
+    if (!list || !active) return;
+    const bounds = list.getBoundingClientRect();
+    const row = active.getBoundingClientRect();
+    const left = row.left < bounds.left ? row.left - bounds.left : Math.max(0, row.right - bounds.right);
+    const top = row.top < bounds.top ? row.top - bounds.top : Math.max(0, row.bottom - bounds.bottom);
+    if (left || top) list.scrollBy({ left, top });
+  }, [heroId, index]);
 
   return <div className="screening-layout">
     <section className="screening-column" aria-label="Clip player">
@@ -118,7 +130,7 @@ export function ScreeningRoom({ heroId, ranking, comparison, playing, watch, sav
         <div className="lineup-title"><ListVideo size={19} /><h2>{watch ? "Related clips" : "Up next"}</h2></div>
         <span>{ranking.items.length} {ranking.items.length === 1 ? "clip" : "clips"}</span>
       </div>
-      {ranking.items.length ? <ol className="lineup-list">
+      {ranking.items.length ? <ol ref={queue} className="lineup-list">
         {ranking.items.map((row) => {
           const clip = items[row.item_id];
           const current = row.item_id === heroId;
@@ -136,7 +148,7 @@ export function ScreeningRoom({ heroId, ranking, comparison, playing, watch, sav
           </motion.li>;
         })}
       </ol> : <p className="lineup-empty">The playlist is empty.</p>}
-      <div className="lineup-foot"><Layers3 size={14} /><span>{ranking.cold_start ? "Ranked for a new session" : "Ranked for your session"}</span></div>
+      <div className="lineup-foot"><Layers3 size={14} /><span>{ranking.items.length} picks from {ranking.candidate_ids.length} eligible</span><Link href="/catalog/">Browse all clips</Link></div>
     </section>
   </div>;
 }

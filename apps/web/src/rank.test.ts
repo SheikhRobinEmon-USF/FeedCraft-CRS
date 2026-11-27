@@ -1,5 +1,6 @@
+import { runCatalogChecks } from "./catalog-checks";
 import { describe, expect, it } from "vitest";
-import { defaults, rank, seedEvents } from "./rank";
+import { catalog, defaults, rank, seedEvents } from "./rank";
 
 describe("browser ranking", () => {
   it("has a deterministic cold start and additive explanations", () => {
@@ -20,8 +21,19 @@ describe("browser ranking", () => {
   });
 
   it("applies seen, intensity, and genre policies before ranking", () => {
-    const result = rank(seedEvents, { ...defaults, exclude_seen: true, intensity: 2, hidden: ["Food"] });
+    const originalIds = ["blue-hour", "night-shift", "the-ascent", "deep-listening", "flour-and-time", "wild-water"];
+    const result = rank(seedEvents, { ...defaults, candidate_ids: originalIds, exclude_seen: true, intensity: 2, hidden: ["Food"] });
     expect(result.candidate_ids).toEqual(["night-shift", "wild-water"]);
-    expect(result.removals).toHaveLength(4);
+    expect(result.removals).toHaveLength(catalog.length - 2);
+  });
+
+  it("promotes target genres across the expanded pool while excluding liked clips from the comparison", () => {
+    const checks = runCatalogChecks();
+    expect(checks.map((check) => check.candidateCount)).toEqual([catalog.length, catalog.length, catalog.length - 2]);
+    for (const check of checks) {
+      expect(check.topK).toBe(10);
+      expect(check.personalizedMatches).toBeGreaterThan(check.baselineMatches);
+      expect(check.sharedClips).toBeLessThan(check.topK);
+    }
   });
 });
