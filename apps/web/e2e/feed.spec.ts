@@ -95,16 +95,27 @@ test("carousel supports keyboard navigation and touch swipes", async ({ page }, 
   await expect(page.getByRole("button", { name: /The Blue Hour/, pressed: true })).toBeVisible();
 });
 
-test("expanded catalog can be filtered and plays a newly published clip", async ({ page }) => {
+test("genre guide filters the catalog and opens a playable clip", async ({ page }, testInfo) => {
   await page.goto("/");
   await page.getByRole("link", { name: "Browse all clips" }).click();
   await expect(page.getByText("12 of 102 matching clips")).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);
+  const accessibility = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze();
+  expect(accessibility.violations).toEqual([]);
+  if (process.env.FEEDCRAFT_SCREENSHOTS) await page.screenshot({ path: testInfo.outputPath("catalog-guide.png"), fullPage: false });
   await page.getByRole("button", { name: "Show more clips" }).click();
   await expect(page.getByText("24 of 102 matching clips")).toBeVisible();
-  await page.getByRole("combobox", { name: "Genre", exact: true }).selectOption("Travel");
+  const guide = page.getByRole("region", { name: "Explore by genre" });
+  await expect(guide.getByRole("button")).toHaveCount(10);
+  await guide.getByRole("button", { name: /^Travel/ }).click();
+  await expect(page.getByRole("heading", { name: "Travel clips" })).toBeFocused();
+  await expect(page.getByRole("combobox", { name: "Genre", exact: true })).toHaveValue("Travel");
   await page.getByRole("searchbox", { name: "Search clips" }).fill("oasis road");
   await expect(page.getByText("1 of 1 matching clip")).toBeVisible();
-  await page.getByRole("link", { name: /Oasis Road/ }).click();
+  const clip = page.getByRole("link", { name: /Oasis Road/ });
+  await expect(clip.locator(".genre-label").first()).toHaveText("Travel");
+  await expect(clip.locator(".genre-label-secondary")).toHaveText("Nature");
+  await clip.click();
   await page.getByRole("button", { name: "Play Oasis Road" }).click();
   await expect.poll(() => page.locator("video").evaluate((video: HTMLVideoElement) => video.readyState)).toBeGreaterThan(1);
 });

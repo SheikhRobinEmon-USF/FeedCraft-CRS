@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowDown, ArrowUp, ArrowUpRight, Bookmark, ChevronLeft, ChevronRight, CirclePlay, Clapperboard, Heart, Layers3, ListVideo, Play, SkipForward, SlidersHorizontal, ThumbsDown, X } from "lucide-react";
 import { AnimatePresence, motion, useIsPresent, useReducedMotion } from "motion/react";
 import { useEffect, useRef } from "react";
+import { GenreLabel } from "./genre-guide";
 import { asset, items, type Kind, type Policy, type Ranking } from "./rank";
 
 export function Cover({ id, priority = false, thumbnail = false }: { id: string; priority?: boolean; thumbnail?: boolean }) {
@@ -101,7 +102,7 @@ export function ScreeningRoom({ heroId, ranking, comparison, playing, watch, sav
                 <div className="frame-shadow" />
                 <span className="film-type"><Clapperboard size={13} /> Simulated short</span>
                 <div className="film-copy">
-                  <div className="film-meta"><span>{hero.genres.join(" / ")}</span><span className="meta-dot" /><span>0:{hero.seconds.toString().padStart(2, "0")}</span></div>
+                  <div className="film-meta">{hero.genres.map((name, index) => <GenreLabel key={name} name={name} secondary={index > 0} />)}<span>0:{hero.seconds.toString().padStart(2, "0")}</span></div>
                   <h2>{hero.title}</h2>
                   <p>{hero.description}</p>
                   <button className="watch-button" type="button" aria-label={`Play ${hero.title}`} onClick={() => onPlay(true)}><Play size={16} fill="currentColor" /> Watch clip</button>
@@ -140,7 +141,7 @@ export function ScreeningRoom({ heroId, ranking, comparison, playing, watch, sav
           const content = <>
             <span className="lineup-position">{current ? <Play size={13} fill="currentColor" aria-hidden="true" /> : row.rank.toString().padStart(2, "0")}</span>
             <span className="lineup-thumb"><Cover id={clip.id} thumbnail /></span>
-            <span className="lineup-copy"><strong>{clip.title}</strong><small>{clip.genres[0]} <span>·</span> {clip.seconds}s</small></span>
+            <span className="lineup-copy"><strong>{clip.title}</strong><small><span className="lineup-genre" data-genre={clip.genres[0]}>{clip.genres[0]}</span> <span>·</span> {clip.seconds}s</small></span>
             {entered ? <span className="rank-change new" aria-label="New in this queue">New</span> : diff !== 0 && <span className={`rank-change ${diff > 0 ? "up" : "down"}`} aria-label={`${Math.abs(diff)} places ${diff > 0 ? "up" : "down"}`}>{diff > 0 ? <ArrowUp size={12} /> : <ArrowDown size={12} />}{Math.abs(diff)}</span>}
           </>;
           return <motion.li key={clip.id} layout={reduced ? false : "position"} transition={{ type: "spring", stiffness: 440, damping: 36 }}>
