@@ -135,12 +135,13 @@ export function ScreeningRoom({ heroId, ranking, comparison, playing, watch, sav
           const clip = items[row.item_id];
           const current = row.item_id === heroId;
           const before = comparison.indexOf(clip.id);
+          const entered = comparison.length > 0 && before < 0;
           const diff = before >= 0 ? before + 1 - row.rank : 0;
           const content = <>
             <span className="lineup-position">{current ? <Play size={13} fill="currentColor" aria-hidden="true" /> : row.rank.toString().padStart(2, "0")}</span>
             <span className="lineup-thumb"><Cover id={clip.id} thumbnail /></span>
             <span className="lineup-copy"><strong>{clip.title}</strong><small>{clip.genres[0]} <span>·</span> {clip.seconds}s</small></span>
-            {diff !== 0 && <span className={`rank-change ${diff > 0 ? "up" : "down"}`} aria-label={`${Math.abs(diff)} places ${diff > 0 ? "up" : "down"}`}>{diff > 0 ? <ArrowUp size={12} /> : <ArrowDown size={12} />}{Math.abs(diff)}</span>}
+            {entered ? <span className="rank-change new" aria-label="New in this queue">New</span> : diff !== 0 && <span className={`rank-change ${diff > 0 ? "up" : "down"}`} aria-label={`${Math.abs(diff)} places ${diff > 0 ? "up" : "down"}`}>{diff > 0 ? <ArrowUp size={12} /> : <ArrowDown size={12} />}{Math.abs(diff)}</span>}
           </>;
           return <motion.li key={clip.id} layout={reduced ? false : "position"} transition={{ type: "spring", stiffness: 440, damping: 36 }}>
             {watch ? <Link href={`/watch/${clip.id}/`} className="lineup-row" aria-current={current ? "page" : undefined}>{content}</Link> :

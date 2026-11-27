@@ -7,6 +7,7 @@ import { catalog, genres } from "./rank";
 import { Cover } from "./screening-room";
 
 const pageSize = 12;
+const genreCounts = new Map(genres.map((genre) => [genre, catalog.filter((clip) => clip.genres.includes(genre)).length]));
 
 export function ClipCatalog() {
   const [query, setQuery] = useState("");
@@ -20,14 +21,14 @@ export function ClipCatalog() {
 
   return <>
     <header className="intro">
-      <div><h1>Clip catalog</h1><p>Browse {catalog.length} original simulated shorts by title or genre.</p></div>
+      <div><h1>Clip catalog</h1><p>Browse {catalog.length} original simulated shorts across {genres.length} genres.</p></div>
     </header>
     <div className="panel catalog-filters">
       <div className="catalog-field"><label htmlFor="clip-search">Search clips</label><div className="catalog-search"><Search size={16} aria-hidden="true" />
         <input id="clip-search" type="search" placeholder="Title, genre, or subject" value={query}
           onChange={(event) => { setQuery(event.target.value); setLimit(pageSize); }} /></div></div>
       <div className="catalog-field"><label htmlFor="clip-genre">Genre</label><select id="clip-genre" value={genre} onChange={(event) => { setGenre(event.target.value); setLimit(pageSize); }}>
-        <option value="">All genres</option>{genres.map((key) => <option key={key}>{key}</option>)}
+        <option value="">All genres</option>{genres.map((key) => <option value={key} key={key}>{key} ({genreCounts.get(key)})</option>)}
       </select></div>
     </div>
     <p className="catalog-tally micro" aria-live="polite">{shown.length} of {results.length} matching {results.length === 1 ? "clip" : "clips"}</p>

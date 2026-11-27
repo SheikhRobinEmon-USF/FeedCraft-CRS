@@ -1,6 +1,7 @@
+import { existsSync } from "node:fs";
 import { runCatalogChecks } from "./catalog-checks";
 import { describe, expect, it } from "vitest";
-import { catalog, defaults, rank, seedEvents } from "./rank";
+import { catalog, defaults, genres, rank, seedEvents } from "./rank";
 
 describe("browser ranking", () => {
   it("has a deterministic cold start and additive explanations", () => {
@@ -29,11 +30,23 @@ describe("browser ranking", () => {
 
   it("promotes target genres across the expanded pool while excluding liked clips from the comparison", () => {
     const checks = runCatalogChecks();
-    expect(checks.map((check) => check.candidateCount)).toEqual([catalog.length, catalog.length, catalog.length - 2]);
+    expect(checks.filter((check) => check.label.endsWith("preference")).every((check) => check.candidateCount === catalog.length)).toBe(true);
+    expect(checks.filter((check) => check.label.endsWith("feedback")).every((check) => check.candidateCount === catalog.length - 2)).toBe(true);
     for (const check of checks) {
       expect(check.topK).toBe(10);
       expect(check.personalizedMatches).toBeGreaterThan(check.baselineMatches);
       expect(check.sharedClips).toBeLessThan(check.topK);
     }
   });
+});
+
+it("has a complete media triplet for each clip in the 10-genre catalog", () => {
+  expect(new Set(catalog.map((clip) => clip.id)).size).toBe(catalog.length);
+  expect(catalog.length).toBeGreaterThanOrEqual(100);
+  expect(genres).toHaveLength(10);
+  for (const { id } of catalog) {
+    for (const extension of ["mp4", "webp", "vtt"]) {
+      expect(existsSync(new URL(`../public/demo/${id}.${extension}`, import.meta.url)), `${id}.${extension}`).toBe(true);
+    }
+  }
 });

@@ -144,7 +144,7 @@ function CatalogChecks() {
   const checks = runCatalogChecks();
   return <section className="panel settings">
     <h2>Catalog responsiveness</h2>
-    <p>Each scenario compares two top-10 lists from the same candidate pool. The feedback session likes two food clips, then excludes those clips from both lists.</p>
+    <p>Each scenario compares two top-10 lists from the same candidate pool. Each feedback scenario excludes its two liked clips from both lists.</p>
     <div className="table-wrap"><table>
       <caption>Deterministic checks on simulated clips. Counts measure ranking response to a known input.</caption>
       <thead><tr><th scope="col">Scenario</th><th scope="col">Eligible clips</th><th scope="col">Genre</th>

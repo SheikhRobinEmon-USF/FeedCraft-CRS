@@ -114,6 +114,7 @@ select { border: 1px solid var(--line); border-radius: 7px; padding: 8px 12px; b
 .rank-change { display: flex; align-items: center; gap: 2px; font: 700 .72rem/1 var(--mono); }
 .rank-change.up { color: #a8d6a4; }
 .rank-change.down { color: #f0ac96; }
+.rank-change.new { color: #ffc29f; }
 .lineup-foot { min-height: 40px; border-top: 1px solid var(--line); }
 .lineup-empty { padding: 15px; color: var(--muted); }
 

@@ -21,7 +21,7 @@
           "items": {
             "type": "string"
           },
-          "maxItems": 7,
+          "maxItems": 10,
           "title": "Interests",
           "type": "array"
         },
@@ -29,7 +29,7 @@
           "items": {
             "type": "string"
           },
-          "maxItems": 7,
+          "maxItems": 10,
           "title": "Hidden",
           "type": "array"
         },
@@ -51,7 +51,7 @@
               "items": {
                 "type": "string"
               },
-              "maxItems": 30,
+              "maxItems": 102,
               "type": "array"
             },
             {

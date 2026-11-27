@@ -4,6 +4,9 @@ const scenarios: { label: string; genre: string; interests: string[]; feedback: 
   { label: "Documentary preference", genre: "Documentary", interests: ["Documentary"], feedback: [] },
   { label: "Sports preference", genre: "Sports", interests: ["Sports"], feedback: [] },
   { label: "Food feedback", genre: "Food", interests: [], feedback: ["first-pour", "market-colors"] },
+  { label: "Architecture preference", genre: "Architecture", interests: ["Architecture"], feedback: [] },
+  { label: "Travel preference", genre: "Travel", interests: ["Travel"], feedback: [] },
+  { label: "Technology feedback", genre: "Technology", interests: [], feedback: ["copper-traces", "underwater-workshop"] },
 ];
 
 export function runCatalogChecks() {

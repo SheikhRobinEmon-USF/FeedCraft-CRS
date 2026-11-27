@@ -5,7 +5,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from services.api import app as server
-from services.recs.demo import SEED_EVENTS, rank
+from services.recs.demo import CATALOG, SEED_EVENTS, rank
 
 
 @pytest.fixture
@@ -57,6 +57,25 @@ def test_catalog_and_simulator(client):
     assert result["synthetic"]
     assert result["familiar"]["candidate_ids"] == result["exploratory"]["candidate_ids"]
     assert result["familiar"]["items"] != result["exploratory"]["items"]
+
+
+def test_catalog_pages_and_frozen_pool_include_every_clip(client):
+    expected = [clip["id"] for clip in CATALOG]
+    assert len(expected) >= 100
+    ids = []
+    cursor = 0
+    while cursor is not None:
+        page = client.get(f"/api/catalog?limit=50&cursor={cursor}").json()
+        ids.extend(clip["id"] for clip in page["items"])
+        cursor = page["next_cursor"]
+    assert ids == expected
+
+    response = client.post("/api/recommendations", headers=session(client),
+                           json={"n": 20, "ranking_policy": {"candidate_ids": ids}})
+    assert response.status_code == 200
+    ranked = response.json()
+    assert ranked["candidate_ids"] == expected
+    assert len({row["item_id"] for row in ranked["items"]}) == 20
 
 
 def test_trace_contributions_and_filters():

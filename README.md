@@ -10,7 +10,7 @@ With Node.js 24, npm, Python 3, and Make installed, run:
 make demo
 ```
 
-Open [localhost:3000](http://127.0.0.1:3000). Installation downloads locked npm dependencies. After the build, the app needs only its static files. The repository includes the recorded aggregate evaluation, 30 silent simulated clips with caption tracks, and a browser-local ranker. Preferences and feedback live in the current tab session.
+Open [localhost:3000](http://127.0.0.1:3000). Installation downloads locked npm dependencies. After the build, the app needs only its static files. The repository includes the recorded aggregate evaluation, 102 silent simulated clips across 10 genres, all with caption tracks, and a browser-local ranker. Preferences and feedback live in the current tab session.
 
 ## Run the optional API and research pipeline
 
