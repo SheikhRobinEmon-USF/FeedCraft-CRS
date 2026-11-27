@@ -108,3 +108,41 @@ test("expanded catalog can be filtered and plays a newly published clip", async 
   await page.getByRole("button", { name: "Play Oasis Road" }).click();
   await expect.poll(() => page.locator("video").evaluate((video: HTMLVideoElement) => video.readyState)).toBeGreaterThan(1);
 });
+
+test("fresh test link restores the cold-start order and still accepts feedback", async ({ page }) => {
+  await page.goto("/feed/");
+  const refresh = page.getByRole("button", { name: /Refresh for You/ });
+  await expect(refresh).toBeEnabled();
+  const ranked = page.getByRole("region", { name: "Ranked clips" });
+  const titles = () => ranked.locator(".lineup-copy strong").allTextContents();
+  const baseline = await titles();
+  expect(baseline).toHaveLength(12);
+
+  async function giveFeedback() {
+    await page.getByRole("button", { name: "♡ Like", exact: true }).click();
+    await page.getByRole("button", { name: "Save", exact: true }).click();
+    await refresh.click();
+    await expect(page.getByRole("status").filter({ hasText: /Feed refreshed.*positions changed/ })).toBeVisible();
+  }
+
+  await giveFeedback();
+  const personalized = await titles();
+  expect(personalized).not.toEqual(baseline);
+  await page.getByLabel("Freeze candidate pool").check();
+  await page.getByLabel("Exploration", { exact: true }).press("End");
+
+  await page.goto("/test/");
+  await expect(page).toHaveURL(/\/feed\/$/);
+  await expect(refresh).toBeEnabled();
+  await expect(page.getByLabel("Freeze candidate pool")).not.toBeChecked();
+  await expect(page.locator('output[for="feed-exploration"]')).toHaveText("25%");
+  await expect(page.getByRole("button", { name: "♡ Like", exact: true })).toHaveAttribute("aria-pressed", "false");
+  await expect(page.getByRole("button", { name: "Save", exact: true })).toBeVisible();
+  expect(await titles()).toEqual(baseline);
+
+  await giveFeedback();
+  expect(await titles()).toEqual(personalized);
+  await page.reload();
+  await expect(refresh).toBeEnabled();
+  expect(await titles()).toEqual(personalized);
+});

@@ -93,7 +93,7 @@ function Inspector({ row, ranking, detailed = false }: { row?: Row; ranking: Ran
   </aside>;
 }
 
-export default function Studio({ view, item }: { view: View; item?: string }) {
+export default function Studio({ view, item, freshStart = false }: { view: View; item?: string; freshStart?: boolean }) {
   const router = useRouter();
   const [state, setState] = useState(initial);
   const stateRef = useRef(initial);
@@ -112,6 +112,14 @@ export default function Studio({ view, item }: { view: View; item?: string }) {
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
+      if (freshStart) {
+        try {
+          sessionStorage.removeItem(storageKey);
+          sessionStorage.removeItem(`${storageKey}-selection`);
+        } catch { /* no stored data is accessible */ }
+        router.replace("/feed/");
+        return;
+      }
       try {
         const serialized = sessionStorage.getItem(storageKey);
         if (serialized) {
@@ -131,13 +139,17 @@ export default function Studio({ view, item }: { view: View; item?: string }) {
       setReady(true);
     });
     return () => cancelAnimationFrame(frame);
-  }, []);
+  }, [freshStart, router]);
 
   useEffect(() => {
     if (!status) return;
     const timer = setTimeout(() => setStatus(""), 5500);
     return () => clearTimeout(timer);
   }, [status]);
+
+  if (freshStart) {
+    return <main className="content"><h1>Starting a fresh test</h1><p role="status">Resetting this tab’s demo session…</p></main>;
+  }
 
   const policy = state.policy;
   const ranking = state.ranking ?? rank(state.snapshot, policy, queueSize);
